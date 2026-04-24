@@ -1,14 +1,4 @@
 :root {
-  --brand-light: #eef6f2;
-  --brand: #69be94;
-  --brand-dark: #4a8d6e;
-  --brand-text: #2d4a3e;
-  --brand-border: rgba(74, 141, 110, 0.22);
-  --font-sans:
-    'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic',
-    system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono:
-    'SFMono-Regular', 'Roboto Mono', 'Courier New', ui-monospace, monospace;
   font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
