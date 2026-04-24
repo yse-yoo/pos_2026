@@ -1,0 +1,64 @@
+:root {
+  --brand-light: #eef6f2;
+  --brand: #69be94;
+  --brand-dark: #4a8d6e;
+  --brand-text: #2d4a3e;
+  --brand-border: rgba(74, 141, 110, 0.22);
+  --font-sans:
+    'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic',
+    system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:
+    'SFMono-Regular', 'Roboto Mono', 'Courier New', ui-monospace, monospace;
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--brand-text);
+  background: #f2f5f3;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #f2f5f3;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button:focus-visible {
+  outline: 3px solid rgba(105, 190, 148, 0.3);
+  outline-offset: 2px;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
