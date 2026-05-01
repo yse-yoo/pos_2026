@@ -18,7 +18,9 @@ export function AppHeader({ activeView, onViewChange }: AppHeaderProps) {
           <span className="brand-mark" aria-hidden="true">
             🌿
           </span>
-          <span className="brand-title">SmartPOS</span>
+          <span className="brand-title">
+            <a href="/" className="text-white">SmartPOS</a>
+          </span>
         </div>
 
         <MainNavigation activeView={activeView} onViewChange={onViewChange} />

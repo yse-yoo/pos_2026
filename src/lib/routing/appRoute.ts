@@ -4,7 +4,7 @@ export const getProductEditPath = (productId: number) => `/products/${productId}
 
 export const getPathForRoute = (route: AppRoute) => {
   if (route.view === 'pos') {
-    return '/pos'
+    return '/'
   }
 
   if (route.view === 'history') {
@@ -23,7 +23,7 @@ export const getPathForRoute = (route: AppRoute) => {
 }
 
 export const resolveRouteFromPath = (pathName: string): AppRoute => {
-  if (pathName === '/pos') {
+  if (pathName === '/' || pathName === '/pos') {
     return { view: 'pos' }
   }
 
