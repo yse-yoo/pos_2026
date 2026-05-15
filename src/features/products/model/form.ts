@@ -1,16 +1,17 @@
-import { productCategoriesFixture } from '../../../mocks/categories'
 import type {
   AdminProduct,
+  ProductCategory,
   ProductFormErrors,
   ProductFormPayload,
   ProductFormState,
 } from '../../../types/product'
 
-export const createEmptyProductForm = (): ProductFormState => ({
+export const createEmptyProductForm = (categories: ProductCategory[] = []): ProductFormState => ({
   name: '',
   price: '',
-  categoryId: String(productCategoriesFixture[0].id),
+  categoryId: categories[0] ? String(categories[0].id) : '',
   icon: '',
+  imagePath: '',
   isActive: true,
   sortOrder: '0',
 })
@@ -20,11 +21,15 @@ export const createProductFormFromItem = (item: AdminProduct): ProductFormState 
   price: String(item.price),
   categoryId: String(item.categoryId),
   icon: item.icon,
+  imagePath: item.imagePath,
   isActive: item.isActive,
   sortOrder: String(item.sortOrder),
 })
 
-export const validateProductForm = (form: ProductFormState): {
+export const validateProductForm = (
+  form: ProductFormState,
+  categories: ProductCategory[],
+): {
   errors: ProductFormErrors
   payload?: ProductFormPayload
 } => {
@@ -33,6 +38,7 @@ export const validateProductForm = (form: ProductFormState): {
   const normalizedPrice = Number(form.price)
   const normalizedCategoryId = Number(form.categoryId)
   const normalizedIcon = form.icon.trim()
+  const normalizedImagePath = form.imagePath.trim()
   const normalizedSortOrder = Number(form.sortOrder)
 
   if (normalizedName.length === 0 || normalizedName.length > 50) {
@@ -47,7 +53,7 @@ export const validateProductForm = (form: ProductFormState): {
     errors.price = '価格は0〜999999の整数で入力してください。'
   }
 
-  if (!productCategoriesFixture.some((category) => category.id === normalizedCategoryId)) {
+  if (!categories.some((category) => category.id === normalizedCategoryId)) {
     errors.categoryId = 'カテゴリを選択してください。'
   }
 
@@ -70,6 +76,7 @@ export const validateProductForm = (form: ProductFormState): {
       price: normalizedPrice,
       categoryId: normalizedCategoryId,
       icon: normalizedIcon,
+      imagePath: normalizedImagePath,
       isActive: form.isActive,
       sortOrder: normalizedSortOrder,
     },

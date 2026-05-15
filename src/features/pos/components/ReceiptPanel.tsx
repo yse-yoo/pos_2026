@@ -1,0 +1,57 @@
+import { ErrorBanner } from '../../../components/feedback/ErrorBanner'
+import { formatReceiptNumber } from '../../../lib/format/receipt'
+import type { CartItem } from '../../../types/product'
+import type { PaymentMethod } from '../hooks/useCart'
+import { ReceiptActions } from './ReceiptActions'
+import { ReceiptItems } from './ReceiptItems'
+import { ReceiptSummary } from './ReceiptSummary'
+
+type ReceiptPanelProps = {
+  items: CartItem[]
+  receiptNumber: number
+  subtotal: number
+  tax: number
+  total: number
+  isCompletingPayment: boolean
+  paymentErrorMessage: string | null
+  onChangeQuantity: (productId: number, delta: number) => void
+  onClearOrder: () => void
+  onCompletePayment: (method: PaymentMethod) => Promise<void>
+}
+
+export function ReceiptPanel({
+  items,
+  receiptNumber,
+  subtotal,
+  tax,
+  total,
+  isCompletingPayment,
+  paymentErrorMessage,
+  onChangeQuantity,
+  onClearOrder,
+  onCompletePayment,
+}: ReceiptPanelProps) {
+  const hasItems = items.length > 0
+
+  return (
+    <aside className="page-panel receipt-panel">
+      <div className="receipt-header">
+        <h2>注文内容</h2>
+        <span className="receipt-number">{formatReceiptNumber(receiptNumber)}</span>
+      </div>
+
+      {paymentErrorMessage ? (
+        <ErrorBanner title="会計登録に失敗しました" message={paymentErrorMessage} />
+      ) : null}
+
+      <ReceiptItems items={items} onChangeQuantity={onChangeQuantity} />
+      <ReceiptSummary subtotal={subtotal} tax={tax} total={total} />
+      <ReceiptActions
+        hasItems={hasItems}
+        isCompletingPayment={isCompletingPayment}
+        onClearOrder={onClearOrder}
+        onCompletePayment={onCompletePayment}
+      />
+    </aside>
+  )
+}

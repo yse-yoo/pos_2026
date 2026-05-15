@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { listSalesHistory } from '../api/salesHistoryRepository.mock'
+import { listSalesHistory } from '../api/salesHistoryRepository'
 import type { SalesHistoryItem } from '../../../types/sales'
 
 export const useSalesHistory = () => {

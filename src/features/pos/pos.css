@@ -84,6 +84,14 @@
   line-height: 1;
 }
 
+.product-image {
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 0.85rem;
+  object-fit: cover;
+  background: #f8faf9;
+}
+
 .product-name {
   width: 100%;
   color: #334155;

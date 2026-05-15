@@ -3,9 +3,12 @@ import { InfoPairList } from '../../components/data-display/InfoPairList'
 import { ResponsiveTable, type ResponsiveTableColumn } from '../../components/data-display/ResponsiveTable'
 import { SummaryCard } from '../../components/data-display/SummaryCard'
 import { EmptyState } from '../../components/feedback/EmptyState'
+import { ErrorBanner } from '../../components/feedback/ErrorBanner'
+import { LoadingState } from '../../components/feedback/LoadingState'
 import { StatusChip } from '../../components/feedback/StatusChip'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { PagePanel } from '../../components/layout/PagePanel'
+import { buildAssetUrl } from '../../lib/api/client'
 import { formatCurrency } from '../../lib/format/currency'
 import type { AppRoute } from '../../types/app-route'
 import type { AdminProduct, ProductStatusFilter } from '../../types/product'
@@ -27,16 +30,18 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
     selectedStatus,
     activeProductCount,
     inactiveProductCount,
+    isLoading,
+    errorMessage,
     setSearchKeyword,
     setSelectedCategoryId,
     setSelectedStatus,
     deleteProduct,
   } = useProductCatalog()
 
-  const handleDeleteProduct = (productId: number) => {
+  const handleDeleteProduct = async (productId: number) => {
     const shouldDelete = window.confirm('この商品を削除しますか？')
     if (shouldDelete) {
-      deleteProduct(productId)
+      await deleteProduct(productId)
     }
   }
 
@@ -63,6 +68,16 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
       key: 'icon',
       header: 'アイコン',
       render: (product) => <span className="admin-icon-badge">{product.icon || '・'}</span>,
+    },
+    {
+      key: 'imagePath',
+      header: '画像',
+      render: (product) =>
+        product.imagePath ? (
+          <img className="admin-product-thumb" src={buildAssetUrl(product.imagePath)} alt="" />
+        ) : (
+          <span className="admin-image-placeholder">なし</span>
+        ),
     },
     {
       key: 'status',
@@ -122,13 +137,24 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
           }
         />
 
-        <div className="admin-summary-grid">
+        {errorMessage ? (
+          <ErrorBanner title="商品マスタ取得に失敗しました" message={errorMessage} />
+        ) : null}
+
+        {isLoading ? (
+          <LoadingState
+            title="商品マスタを読み込み中です"
+            description="カテゴリと商品一覧を取得しています。"
+          />
+        ) : null}
+
+        {!isLoading ? <div className="admin-summary-grid">
           <SummaryCard label="登録商品" value={products.length} />
           <SummaryCard label="表示中" value={activeProductCount} />
           <SummaryCard label="非表示" value={inactiveProductCount} />
-        </div>
+        </div> : null}
 
-        <div className="admin-filter-panel">
+        {!isLoading ? <div className="admin-filter-panel">
           <div className="admin-filter-grid">
             <label className="admin-filter-field">
               <span>キーワード検索</span>
@@ -172,9 +198,9 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
               </select>
             </label>
           </div>
-        </div>
+        </div> : null}
 
-        {filteredProducts.length === 0 ? (
+        {!isLoading && filteredProducts.length === 0 ? (
           <EmptyState
             icon="📦"
             title={products.length === 0 ? '商品が登録されていません' : '条件に合う商品がありません'}
@@ -185,7 +211,7 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
             }
             className="admin-empty-state"
           />
-        ) : (
+        ) : !isLoading ? (
           <div className="admin-table-shell">
             <ResponsiveTable
               data={filteredProducts}
@@ -199,7 +225,15 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
                       <span className="admin-mobile-id">ID {product.id}</span>
                       <strong>{product.name}</strong>
                     </div>
-                    <span className="admin-icon-badge">{product.icon || '・'}</span>
+                    {product.imagePath ? (
+                      <img
+                        className="admin-product-thumb"
+                        src={buildAssetUrl(product.imagePath)}
+                        alt=""
+                      />
+                    ) : (
+                      <span className="admin-icon-badge">{product.icon || '・'}</span>
+                    )}
                   </div>
 
                   <InfoPairList
@@ -238,7 +272,7 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
               )}
             />
           </div>
-        )}
+        ) : null}
       </PagePanel>
     </div>
   )

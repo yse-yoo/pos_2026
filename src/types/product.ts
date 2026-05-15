@@ -1,4 +1,4 @@
-export type ProductCategoryName = 'フード' | 'ドリンク' | 'トッピング' | '有料袋'
+export type ProductCategoryName = string
 
 export type PosCategoryName = '全て' | ProductCategoryName
 
@@ -17,6 +17,7 @@ export type AdminProduct = {
   price: number
   categoryId: number
   icon: string
+  imagePath: string
   isActive: boolean
   sortOrder: number
   createdAt: string
@@ -29,6 +30,7 @@ export type PosProduct = {
   price: number
   category: ProductCategoryName
   icon: string
+  imagePath: string
 }
 
 export type CartItem = PosProduct & {
@@ -40,6 +42,7 @@ export type ProductFormState = {
   price: string
   categoryId: string
   icon: string
+  imagePath: string
   isActive: boolean
   sortOrder: string
 }
@@ -53,6 +56,7 @@ export type ProductFormPayload = {
   price: number
   categoryId: number
   icon: string
+  imagePath: string
   isActive: boolean
   sortOrder: number
 }

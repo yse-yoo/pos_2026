@@ -1,17 +1,23 @@
-import { type FormEvent, useState } from 'react'
+import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from 'react'
 import { Button } from '../../components/actions/Button'
 import { EmptyState } from '../../components/feedback/EmptyState'
+import { LoadingState } from '../../components/feedback/LoadingState'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { PagePanel } from '../../components/layout/PagePanel'
+import { buildAssetUrl } from '../../lib/api/client'
 import type { ProductScreen } from '../../types/app-route'
 import type { ProductFormField } from '../../types/product'
 import { useProductCatalog } from './hooks/useProductCatalog'
+import { uploadProductImage } from './api/productCatalogRepository'
 import {
   createEmptyProductForm,
   createProductFormFromItem,
   validateProductForm,
 } from './model/form'
 import './products.css'
+
+const IMAGE_MAX_SIZE = 2 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 
 type ProductFormPageProps = {
   mode: Exclude<ProductScreen, 'list'>
@@ -20,12 +26,39 @@ type ProductFormPageProps = {
 }
 
 export function ProductFormPage({ mode, productId, onBack }: ProductFormPageProps) {
-  const { categories, createProduct, updateProduct, getProductById } = useProductCatalog()
+  const { categories, createProduct, updateProduct, getProductById, isLoading } = useProductCatalog()
   const editingProduct = mode === 'edit' && typeof productId === 'number' ? getProductById(productId) : null
   const [form, setForm] = useState(() =>
-    editingProduct ? createProductFormFromItem(editingProduct) : createEmptyProductForm(),
+    editingProduct ? createProductFormFromItem(editingProduct) : createEmptyProductForm(categories),
   )
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSaving, setIsSaving] = useState(false)
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
+  const [selectedImagePreviewUrl, setSelectedImagePreviewUrl] = useState<string | null>(null)
+  const selectedImagePreviewUrlRef = useRef<string | null>(null)
+  const effectiveCategoryId = form.categoryId || (categories[0] ? String(categories[0].id) : '')
+  const imagePreviewUrl = selectedImagePreviewUrl ?? (form.imagePath ? buildAssetUrl(form.imagePath) : '')
+
+  useEffect(() => {
+    return () => {
+      if (selectedImagePreviewUrlRef.current) {
+        URL.revokeObjectURL(selectedImagePreviewUrlRef.current)
+      }
+    }
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="product-admin-layout">
+        <PagePanel className="admin-panel">
+          <LoadingState
+            title="商品マスタを読み込み中です"
+            description="編集に必要なカテゴリと商品一覧を取得しています。"
+          />
+        </PagePanel>
+      </div>
+    )
+  }
 
   if (mode === 'edit' && !editingProduct) {
     return (
@@ -64,22 +97,102 @@ export function ProductFormPage({ mode, productId, onBack }: ProductFormPageProp
     })
   }
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const clearSelectedImage = () => {
+    setSelectedImageFile(null)
+    if (selectedImagePreviewUrlRef.current) {
+      URL.revokeObjectURL(selectedImagePreviewUrlRef.current)
+      selectedImagePreviewUrlRef.current = null
+    }
+    setSelectedImagePreviewUrl(null)
+  }
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const imageFile = event.target.files?.[0] ?? null
+
+    if (!imageFile) {
+      clearSelectedImage()
+      return
+    }
+
+    if (!ALLOWED_IMAGE_TYPES.includes(imageFile.type)) {
+      clearSelectedImage()
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        imagePath: '画像は JPEG, PNG, GIF, WebP のいずれかを選択してください。',
+      }))
+      event.target.value = ''
+      return
+    }
+
+    if (imageFile.size > IMAGE_MAX_SIZE) {
+      clearSelectedImage()
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        imagePath: '画像は2MB以内で選択してください。',
+      }))
+      event.target.value = ''
+      return
+    }
+
+    if (selectedImagePreviewUrlRef.current) {
+      URL.revokeObjectURL(selectedImagePreviewUrlRef.current)
+    }
+
+    const previewUrl = URL.createObjectURL(imageFile)
+    selectedImagePreviewUrlRef.current = previewUrl
+    setSelectedImageFile(imageFile)
+    setSelectedImagePreviewUrl(previewUrl)
+    setErrors((currentErrors) => {
+      if (!currentErrors.imagePath) {
+        return currentErrors
+      }
+
+      const nextErrors = { ...currentErrors }
+      delete nextErrors.imagePath
+      return nextErrors
+    })
+  }
+
+  const clearImage = () => {
+    clearSelectedImage()
+    updateField('imagePath', '')
+  }
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    const { errors: nextErrors, payload } = validateProductForm(form)
+    const { errors: nextErrors, payload } = validateProductForm(
+      { ...form, categoryId: effectiveCategoryId },
+      categories,
+    )
     if (!payload) {
       setErrors(nextErrors)
       return
     }
 
-    if (mode === 'edit' && editingProduct) {
-      updateProduct(editingProduct.id, payload)
-    } else {
-      createProduct(payload)
-    }
+    setIsSaving(true)
+    setErrors({})
 
-    onBack()
+    try {
+      const imagePath = selectedImageFile
+        ? await uploadProductImage(selectedImageFile)
+        : payload.imagePath
+      const productPayload = { ...payload, imagePath }
+
+      if (mode === 'edit' && editingProduct) {
+        await updateProduct(editingProduct.id, productPayload)
+      } else {
+        await createProduct(productPayload)
+      }
+
+      onBack()
+    } catch (error: unknown) {
+      setErrors({
+        form: error instanceof Error ? error.message : '商品の保存に失敗しました。',
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -96,6 +209,8 @@ export function ProductFormPage({ mode, productId, onBack }: ProductFormPageProp
         />
 
         <form className="admin-form" onSubmit={handleSubmit}>
+          {errors.form ? <p className="form-error-text">{errors.form}</p> : null}
+
           <div className="admin-form-grid">
             <label className="admin-form-field">
               <span>商品名</span>
@@ -127,7 +242,7 @@ export function ProductFormPage({ mode, productId, onBack }: ProductFormPageProp
               <span>カテゴリ</span>
               <select
                 className="admin-select"
-                value={form.categoryId}
+                value={effectiveCategoryId}
                 onChange={(event) => updateField('categoryId', event.target.value)}
               >
                 {categories.map((category) => (
@@ -152,6 +267,33 @@ export function ProductFormPage({ mode, productId, onBack }: ProductFormPageProp
               />
               {errors.icon ? <small className="form-error-text">{errors.icon}</small> : null}
             </label>
+
+            <div className="admin-form-field admin-image-field">
+              <span>商品画像</span>
+              <div className="admin-image-upload">
+                {imagePreviewUrl ? (
+                  <img className="admin-image-preview" src={imagePreviewUrl} alt="" />
+                ) : (
+                  <span className="admin-image-empty">画像なし</span>
+                )}
+                <div className="admin-image-controls">
+                  <input
+                    type="file"
+                    className="admin-file-input"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleImageChange}
+                  />
+                  {imagePreviewUrl ? (
+                    <Button type="button" variant="ghost" onClick={clearImage}>
+                      画像を削除
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+              {errors.imagePath ? (
+                <small className="form-error-text">{errors.imagePath}</small>
+              ) : null}
+            </div>
 
             <label className="admin-form-field">
               <span>並び順</span>
@@ -185,8 +327,8 @@ export function ProductFormPage({ mode, productId, onBack }: ProductFormPageProp
             <Button variant="ghost" onClick={onBack}>
               キャンセル
             </Button>
-            <Button type="submit" variant="primary">
-              保存
+            <Button type="submit" variant="primary" disabled={isSaving || categories.length === 0}>
+              {isSaving ? '保存中...' : '保存'}
             </Button>
           </div>
         </form>

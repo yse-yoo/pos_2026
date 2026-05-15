@@ -19,12 +19,15 @@ export type ProductCatalogContextValue = {
   selectedStatus: ProductStatusFilter
   activeProductCount: number
   inactiveProductCount: number
+  isLoading: boolean
+  errorMessage: string | null
+  reloadCatalog: () => Promise<void>
   setSearchKeyword: (value: string) => void
   setSelectedCategoryId: (value: string) => void
   setSelectedStatus: (value: ProductStatusFilter) => void
-  createProduct: (payload: ProductFormPayload) => void
-  updateProduct: (productId: number, payload: ProductFormPayload) => void
-  deleteProduct: (productId: number) => void
+  createProduct: (payload: ProductFormPayload) => Promise<void>
+  updateProduct: (productId: number, payload: ProductFormPayload) => Promise<void>
+  deleteProduct: (productId: number) => Promise<void>
   getProductById: (productId: number) => AdminProduct | null
 }
 

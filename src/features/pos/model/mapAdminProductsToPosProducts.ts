@@ -13,4 +13,5 @@ export const mapAdminProductsToPosProducts = (
       price: product.price,
       category: categoryNameById.get(product.categoryId) ?? 'フード',
       icon: product.icon || '・',
+      imagePath: product.imagePath,
     }))

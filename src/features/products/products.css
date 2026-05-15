@@ -109,6 +109,21 @@
   font-size: 1.2rem;
 }
 
+.admin-product-thumb {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.8rem;
+  object-fit: cover;
+  background: #f8faf9;
+  border: 1px solid #edf2ef;
+}
+
+.admin-image-placeholder {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
 .admin-row-actions,
 .admin-mobile-actions {
   display: flex;
@@ -186,6 +201,57 @@
   font-weight: 700;
 }
 
+.admin-image-field {
+  grid-column: span 2;
+}
+
+.admin-image-upload {
+  min-height: 7rem;
+  padding: 0.8rem;
+  border: 1px solid #d9e4dd;
+  border-radius: 0.95rem;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-image-preview,
+.admin-image-empty {
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 0.9rem;
+  border: 1px solid #edf2ef;
+  background: #f8faf9;
+}
+
+.admin-image-preview {
+  object-fit: cover;
+}
+
+.admin-image-empty {
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.admin-image-controls {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-file-input {
+  max-width: 100%;
+  color: #475569;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
 .admin-form-actions {
   display: flex;
   justify-content: flex-end;
@@ -214,6 +280,15 @@
 
   .admin-mobile-actions,
   .admin-form-actions {
+    flex-direction: column;
+  }
+
+  .admin-image-field {
+    grid-column: auto;
+  }
+
+  .admin-image-upload {
+    align-items: flex-start;
     flex-direction: column;
   }
 

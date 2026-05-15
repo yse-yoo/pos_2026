@@ -1,12 +1,23 @@
 import { useMemo, useState } from 'react'
 import { formatCurrency } from '../../../lib/format/currency'
 import type { CartItem, PosProduct } from '../../../types/product'
+import { createSale } from '../api/saleRepository'
 
 const TAX_RATE = 0.1
+const paymentMethodLabels = {
+  cash: '現金',
+  card: 'カード',
+  qr: 'QR',
+  other: 'その他',
+}
+
+export type PaymentMethod = keyof typeof paymentMethodLabels
 
 export const useCart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [receiptNumber, setReceiptNumber] = useState(1)
+  const [isCompletingPayment, setIsCompletingPayment] = useState(false)
+  const [paymentErrorMessage, setPaymentErrorMessage] = useState<string | null>(null)
 
   const subtotal = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -58,14 +69,26 @@ export const useCart = () => {
     }
   }
 
-  const completePayment = (method: string) => {
+  const completePayment = async (method: PaymentMethod) => {
     if (cartItems.length === 0) {
       return
     }
 
-    window.alert(`会計完了 (${method}): ${formatCurrency(total)}`)
-    setCartItems([])
-    setReceiptNumber((currentNumber) => currentNumber + 1)
+    setIsCompletingPayment(true)
+    setPaymentErrorMessage(null)
+
+    try {
+      await createSale(cartItems, method)
+      window.alert(`会計完了 (${paymentMethodLabels[method]}): ${formatCurrency(total)}`)
+      setCartItems([])
+      setReceiptNumber((currentNumber) => currentNumber + 1)
+    } catch (error: unknown) {
+      setPaymentErrorMessage(
+        error instanceof Error ? error.message : '会計登録に失敗しました。',
+      )
+    } finally {
+      setIsCompletingPayment(false)
+    }
   }
 
   return {
@@ -78,5 +101,7 @@ export const useCart = () => {
     changeQuantity,
     clearOrder,
     completePayment,
+    isCompletingPayment,
+    paymentErrorMessage,
   }
 }

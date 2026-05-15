@@ -1,25 +1,62 @@
-import { useMemo, useState, type PropsWithChildren } from 'react'
-import { productCategoriesFixture } from '../../../mocks/categories'
-import { productCatalogFixture } from '../../../mocks/products'
+import { useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react'
 import type { AdminProduct, ProductCategoryName, ProductFormPayload, ProductStatusFilter } from '../../../types/product'
 import { mapAdminProductsToPosProducts } from '../../pos/model/mapAdminProductsToPosProducts'
-import { filterAdminProducts, getNextProductId, sortAdminProducts } from '../model/catalog'
+import {
+  createProduct as createProductRequest,
+  deleteProduct as deleteProductRequest,
+  listCategories,
+  listProducts,
+  updateProduct as updateProductRequest,
+} from '../api/productCatalogRepository'
+import { filterAdminProducts, sortAdminProducts } from '../model/catalog'
 import { ProductCatalogContext } from './ProductCatalogContext'
 
 export function ProductCatalogProvider({ children }: PropsWithChildren) {
-  const [products, setProducts] = useState<AdminProduct[]>(() =>
-    [...productCatalogFixture].sort(sortAdminProducts),
-  )
+  const [categories, setCategories] = useState<Awaited<ReturnType<typeof listCategories>>>([])
+  const [products, setProducts] = useState<AdminProduct[]>([])
   const [searchKeyword, setSearchKeyword] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState<ProductStatusFilter>('all')
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const hasLoaded = useRef(false)
+
+  const reloadCatalog = useCallback(async () => {
+    setIsLoading(true)
+    setErrorMessage(null)
+
+    try {
+      const [nextCategories, nextProducts] = await Promise.all([
+        listCategories(),
+        listProducts(),
+      ])
+
+      setCategories(nextCategories)
+      setProducts([...nextProducts].sort(sortAdminProducts))
+    } catch (error: unknown) {
+      setErrorMessage(
+        error instanceof Error ? error.message : '商品マスタの取得に失敗しました。',
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (hasLoaded.current) {
+      return
+    }
+
+    hasLoaded.current = true
+    void reloadCatalog()
+  }, [reloadCatalog])
 
   const categoryNameById = useMemo(
     () =>
       new Map<number, ProductCategoryName>(
-        productCategoriesFixture.map((category) => [category.id, category.name]),
+        categories.map((category) => [category.id, category.name]),
       ),
-    [],
+    [categories],
   )
 
   const filteredProducts = useMemo(
@@ -42,38 +79,19 @@ export function ProductCatalogProvider({ children }: PropsWithChildren) {
     [products],
   )
 
-  const createProduct = (payload: ProductFormPayload) => {
-    const now = new Date().toISOString()
-
-    setProducts((currentProducts) =>
-      [
-        ...currentProducts,
-        {
-          id: getNextProductId(currentProducts),
-          ...payload,
-          createdAt: now,
-          updatedAt: now,
-        },
-      ].sort(sortAdminProducts),
-    )
+  const createProduct = async (payload: ProductFormPayload) => {
+    await createProductRequest(payload)
+    await reloadCatalog()
   }
 
-  const updateProduct = (productId: number, payload: ProductFormPayload) => {
-    const now = new Date().toISOString()
-
-    setProducts((currentProducts) =>
-      currentProducts
-        .map((product) =>
-          product.id === productId ? { ...product, ...payload, updatedAt: now } : product,
-        )
-        .sort(sortAdminProducts),
-    )
+  const updateProduct = async (productId: number, payload: ProductFormPayload) => {
+    await updateProductRequest(productId, payload)
+    await reloadCatalog()
   }
 
-  const deleteProduct = (productId: number) => {
-    setProducts((currentProducts) =>
-      currentProducts.filter((product) => product.id !== productId).sort(sortAdminProducts),
-    )
+  const deleteProduct = async (productId: number) => {
+    await deleteProductRequest(productId)
+    await reloadCatalog()
   }
 
   const getProductById = (productId: number) =>
@@ -82,7 +100,7 @@ export function ProductCatalogProvider({ children }: PropsWithChildren) {
   return (
     <ProductCatalogContext.Provider
       value={{
-        categories: productCategoriesFixture,
+        categories,
         products,
         filteredProducts,
         posProducts,
@@ -92,6 +110,9 @@ export function ProductCatalogProvider({ children }: PropsWithChildren) {
         selectedStatus,
         activeProductCount,
         inactiveProductCount: products.length - activeProductCount,
+        isLoading,
+        errorMessage,
+        reloadCatalog,
         setSearchKeyword,
         setSelectedCategoryId,
         setSelectedStatus,
