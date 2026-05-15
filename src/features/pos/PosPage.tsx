@@ -11,11 +11,14 @@ export function PosPage() {
   const {
     cartItems,
     receiptNumber,
+    orderType,
+    taxRatePercent,
     subtotal,
     tax,
     total,
     addItem,
     changeQuantity,
+    setOrderType,
     clearOrder,
     completePayment,
     isCompletingPayment,
@@ -45,12 +48,15 @@ export function PosPage() {
       <ReceiptPanel
         items={cartItems}
         receiptNumber={receiptNumber}
+        orderType={orderType}
+        taxRatePercent={taxRatePercent}
         subtotal={subtotal}
         tax={tax}
         total={total}
         isCompletingPayment={isCompletingPayment}
         paymentErrorMessage={paymentErrorMessage}
         onChangeQuantity={changeQuantity}
+        onChangeOrderType={setOrderType}
         onClearOrder={clearOrder}
         onCompletePayment={completePayment}
       />

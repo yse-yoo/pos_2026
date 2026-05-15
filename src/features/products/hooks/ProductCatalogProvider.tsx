@@ -89,6 +89,31 @@ export function ProductCatalogProvider({ children }: PropsWithChildren) {
     await reloadCatalog()
   }
 
+  const reorderProducts = async (orderedProductIds: number[]) => {
+    const productById = new Map(products.map((product) => [product.id, product]))
+
+    await Promise.all(
+      orderedProductIds.map((productId, index) => {
+        const product = productById.get(productId)
+        if (!product) {
+          return Promise.resolve()
+        }
+
+        return updateProductRequest(product.id, {
+          name: product.name,
+          price: product.price,
+          categoryId: product.categoryId,
+          icon: product.icon,
+          imagePath: product.imagePath,
+          isActive: product.isActive,
+          sortOrder: (index + 1) * 10,
+        })
+      }),
+    )
+
+    await reloadCatalog()
+  }
+
   const deleteProduct = async (productId: number) => {
     await deleteProductRequest(productId)
     await reloadCatalog()
@@ -118,6 +143,7 @@ export function ProductCatalogProvider({ children }: PropsWithChildren) {
         setSelectedStatus,
         createProduct,
         updateProduct,
+        reorderProducts,
         deleteProduct,
         getProductById,
       }}

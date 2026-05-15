@@ -1,17 +1,15 @@
+import { useMemo, useState } from 'react'
 import { Button } from '../../components/actions/Button'
-import { InfoPairList } from '../../components/data-display/InfoPairList'
-import { ResponsiveTable, type ResponsiveTableColumn } from '../../components/data-display/ResponsiveTable'
 import { SummaryCard } from '../../components/data-display/SummaryCard'
 import { EmptyState } from '../../components/feedback/EmptyState'
 import { ErrorBanner } from '../../components/feedback/ErrorBanner'
 import { LoadingState } from '../../components/feedback/LoadingState'
-import { StatusChip } from '../../components/feedback/StatusChip'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { PagePanel } from '../../components/layout/PagePanel'
-import { buildAssetUrl } from '../../lib/api/client'
-import { formatCurrency } from '../../lib/format/currency'
 import type { AppRoute } from '../../types/app-route'
-import type { AdminProduct, ProductStatusFilter } from '../../types/product'
+import type { ProductStatusFilter } from '../../types/product'
+import { ProductListRow } from './components/ProductListRow'
+import { ProductMobileCard } from './components/ProductMobileCard'
 import { useProductCatalog } from './hooks/useProductCatalog'
 import './products.css'
 
@@ -36,7 +34,22 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
     setSelectedCategoryId,
     setSelectedStatus,
     deleteProduct,
+    reorderProducts,
   } = useProductCatalog()
+  const [isSortMode, setIsSortMode] = useState(false)
+  const [sortableProductIds, setSortableProductIds] = useState<number[]>([])
+  const [draggingProductId, setDraggingProductId] = useState<number | null>(null)
+  const [isSavingOrder, setIsSavingOrder] = useState(false)
+
+  const productById = useMemo(
+    () => new Map(products.map((product) => [product.id, product])),
+    [products],
+  )
+  const visibleProducts = isSortMode
+    ? sortableProductIds
+        .map((productId) => productById.get(productId))
+        .filter((product) => product !== undefined)
+    : filteredProducts
 
   const handleDeleteProduct = async (productId: number) => {
     const shouldDelete = window.confirm('この商品を削除しますか？')
@@ -45,79 +58,47 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
     }
   }
 
-  const columns: ResponsiveTableColumn<AdminProduct>[] = [
-    { key: 'id', header: 'ID', render: (product) => product.id },
-    {
-      key: 'name',
-      header: '商品名',
-      className: 'admin-name-cell',
-      render: (product) => product.name,
-    },
-    {
-      key: 'price',
-      header: '価格',
-      className: 'admin-price-cell',
-      render: (product) => formatCurrency(product.price),
-    },
-    {
-      key: 'category',
-      header: 'カテゴリ',
-      render: (product) => categoryNameById.get(product.categoryId),
-    },
-    {
-      key: 'icon',
-      header: 'アイコン',
-      render: (product) => <span className="admin-icon-badge">{product.icon || '・'}</span>,
-    },
-    {
-      key: 'imagePath',
-      header: '画像',
-      render: (product) =>
-        product.imagePath ? (
-          <img className="admin-product-thumb" src={buildAssetUrl(product.imagePath)} alt="" />
-        ) : (
-          <span className="admin-image-placeholder">なし</span>
-        ),
-    },
-    {
-      key: 'status',
-      header: '表示状態',
-      render: (product) => (
-        <StatusChip tone={product.isActive ? 'active' : 'inactive'}>
-          {product.isActive ? '表示中' : '非表示'}
-        </StatusChip>
-      ),
-    },
-    {
-      key: 'sortOrder',
-      header: '並び順',
-      render: (product) => <StatusChip mono>{product.sortOrder}</StatusChip>,
-    },
-    {
-      key: 'actions',
-      header: '操作',
-      render: (product) => (
-        <div className="admin-row-actions">
-          <Button
-            variant="secondary"
-            className="row-action-button"
-            onClick={() =>
-              onNavigate({ view: 'products', screen: 'edit', productId: product.id })
-            }
-          >
-            編集
-          </Button>
-          <Button
-            variant="danger"
-            className="row-action-button"
-            onClick={() => handleDeleteProduct(product.id)}
-          >
-            削除
-          </Button>
-        </div>
-      ),
-    },
-  ]
+  const startSortMode = () => {
+    setSortableProductIds(products.map((product) => product.id))
+    setDraggingProductId(null)
+    setIsSortMode(true)
+  }
+
+  const cancelSortMode = () => {
+    setIsSortMode(false)
+    setSortableProductIds([])
+    setDraggingProductId(null)
+  }
+
+  const moveSortableProduct = (targetProductId: number) => {
+    if (draggingProductId === null || draggingProductId === targetProductId) {
+      return
+    }
+
+    setSortableProductIds((currentIds) => {
+      const fromIndex = currentIds.indexOf(draggingProductId)
+      const toIndex = currentIds.indexOf(targetProductId)
+      if (fromIndex < 0 || toIndex < 0) {
+        return currentIds
+      }
+
+      const nextIds = [...currentIds]
+      const [movedProductId] = nextIds.splice(fromIndex, 1)
+      nextIds.splice(toIndex, 0, movedProductId)
+      return nextIds
+    })
+  }
+
+  const saveSortOrder = async () => {
+    setIsSavingOrder(true)
+
+    try {
+      await reorderProducts(sortableProductIds)
+      cancelSortMode()
+    } finally {
+      setIsSavingOrder(false)
+    }
+  }
 
   return (
     <div className="product-admin-layout">
@@ -127,13 +108,46 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
           title="商品管理"
           description="レジで使用する商品を管理できます。"
           actions={
-            <Button
-              variant="primary"
-              className="admin-create-button"
-              onClick={() => onNavigate({ view: 'products', screen: 'create' })}
-            >
-              新規登録
-            </Button>
+            <div className="admin-header-actions">
+              {isSortMode ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    className="p-2 admin-create-button"
+                    onClick={cancelSortMode}
+                    disabled={isSavingOrder}
+                  >
+                    キャンセル
+                  </Button>
+                  <Button
+                    variant="primary"
+                    className="p-2 admin-create-button"
+                    onClick={() => void saveSortOrder()}
+                    disabled={isSavingOrder}
+                  >
+                    {isSavingOrder ? '保存中...' : '並び順を保存'}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="secondary"
+                    className="p-2 admin-create-button"
+                    onClick={startSortMode}
+                    disabled={products.length <= 1}
+                  >
+                    並び替え
+                  </Button>
+                  <Button
+                    variant="primary"
+                    className="p-2 admin-create-button"
+                    onClick={() => onNavigate({ view: 'products', screen: 'create' })}
+                  >
+                    新規登録
+                  </Button>
+                </>
+              )}
+            </div>
           }
         />
 
@@ -154,7 +168,13 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
           <SummaryCard label="非表示" value={inactiveProductCount} />
         </div> : null}
 
-        {!isLoading ? <div className="admin-filter-panel">
+        {!isLoading && isSortMode ? (
+          <div className="admin-sort-mode-panel">
+            商品行をドラッグして並び順を変更し、保存してください。
+          </div>
+        ) : null}
+
+        {!isLoading && !isSortMode ? <div className="admin-filter-panel">
           <div className="admin-filter-grid">
             <label className="admin-filter-field">
               <span>キーワード検索</span>
@@ -200,7 +220,7 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
           </div>
         </div> : null}
 
-        {!isLoading && filteredProducts.length === 0 ? (
+        {!isLoading && visibleProducts.length === 0 ? (
           <EmptyState
             icon="📦"
             title={products.length === 0 ? '商品が登録されていません' : '条件に合う商品がありません'}
@@ -212,65 +232,59 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
             className="admin-empty-state"
           />
         ) : !isLoading ? (
-          <div className="admin-table-shell">
-            <ResponsiveTable
-              data={filteredProducts}
-              columns={columns}
-              tableClassName="admin-table"
-              mobileListClassName="admin-mobile-list"
-              renderMobileCard={(product) => (
-                <article className="admin-mobile-card">
-                  <div className="admin-mobile-head">
-                    <div>
-                      <span className="admin-mobile-id">ID {product.id}</span>
-                      <strong>{product.name}</strong>
+          <div className={`admin-product-list${isSortMode ? ' is-sort-mode' : ''}`}>
+            <div className="admin-table-shell">
+              <div className="admin-table-scroll">
+                <div className="admin-product-table" role="table" aria-label="商品一覧">
+                  <div className="admin-product-header" role="row">
+                    <div className="admin-product-heading" role="columnheader">ID</div>
+                    <div className="admin-product-heading admin-name-cell" role="columnheader">
+                      商品名
                     </div>
-                    {product.imagePath ? (
-                      <img
-                        className="admin-product-thumb"
-                        src={buildAssetUrl(product.imagePath)}
-                        alt=""
+                    <div className="admin-product-heading admin-price-cell" role="columnheader">
+                      価格
+                    </div>
+                    <div className="admin-product-heading" role="columnheader">カテゴリ</div>
+                    <div className="admin-product-heading" role="columnheader">アイコン</div>
+                    <div className="admin-product-heading" role="columnheader">画像</div>
+                    <div className="admin-product-heading" role="columnheader">表示状態</div>
+                    <div className="admin-product-heading" role="columnheader">並び順</div>
+                    <div className="admin-product-heading" role="columnheader">
+                      {isSortMode ? '並び替え' : '操作'}
+                    </div>
+                  </div>
+
+                  <div className="admin-product-rows" role="rowgroup">
+                    {visibleProducts.map((product) => (
+                      <ProductListRow
+                        key={product.id}
+                        product={product}
+                        categoryName={categoryNameById.get(product.categoryId) ?? ''}
+                        isSortMode={isSortMode}
+                        isDragging={draggingProductId === product.id}
+                        onNavigate={onNavigate}
+                        onDeleteProduct={handleDeleteProduct}
+                        onDragStart={setDraggingProductId}
+                        onDragEnter={moveSortableProduct}
+                        onDragEnd={() => setDraggingProductId(null)}
                       />
-                    ) : (
-                      <span className="admin-icon-badge">{product.icon || '・'}</span>
-                    )}
+                    ))}
                   </div>
+                </div>
+              </div>
+            </div>
 
-                  <InfoPairList
-                    items={[
-                      { label: '価格', value: formatCurrency(product.price) },
-                      {
-                        label: 'カテゴリ',
-                        value: categoryNameById.get(product.categoryId) ?? '',
-                      },
-                      {
-                        label: '表示状態',
-                        value: (
-                          <StatusChip tone={product.isActive ? 'active' : 'inactive'}>
-                            {product.isActive ? '表示中' : '非表示'}
-                          </StatusChip>
-                        ),
-                      },
-                      { label: '並び順', value: product.sortOrder },
-                    ]}
-                  />
-
-                  <div className="admin-mobile-actions">
-                    <Button
-                      variant="secondary"
-                      onClick={() =>
-                        onNavigate({ view: 'products', screen: 'edit', productId: product.id })
-                      }
-                    >
-                      編集
-                    </Button>
-                    <Button variant="danger" onClick={() => handleDeleteProduct(product.id)}>
-                      削除
-                    </Button>
-                  </div>
-                </article>
-              )}
-            />
+            <div className="admin-mobile-list">
+              {visibleProducts.map((product) => (
+                <ProductMobileCard
+                  key={product.id}
+                  product={product}
+                  categoryName={categoryNameById.get(product.categoryId) ?? ''}
+                  onNavigate={onNavigate}
+                  onDeleteProduct={handleDeleteProduct}
+                />
+              ))}
+            </div>
           </div>
         ) : null}
       </PagePanel>

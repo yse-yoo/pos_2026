@@ -1,21 +1,19 @@
 import { useMemo, useState } from 'react'
-import { formatCurrency } from '../../../lib/format/currency'
 import type { CartItem, PosProduct } from '../../../types/product'
 import { createSale } from '../api/saleRepository'
 
-const TAX_RATE = 0.1
-const paymentMethodLabels = {
-  cash: '現金',
-  card: 'カード',
-  qr: 'QR',
-  other: 'その他',
+const ORDER_TYPE_TAX_RATES = {
+  dineIn: 0.1,
+  takeout: 0.08,
 }
 
-export type PaymentMethod = keyof typeof paymentMethodLabels
+export type PaymentMethod = 'cash' | 'card' | 'qr' | 'other'
+export type OrderType = keyof typeof ORDER_TYPE_TAX_RATES
 
 export const useCart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [receiptNumber, setReceiptNumber] = useState(1)
+  const [orderType, setOrderType] = useState<OrderType>('dineIn')
   const [isCompletingPayment, setIsCompletingPayment] = useState(false)
   const [paymentErrorMessage, setPaymentErrorMessage] = useState<string | null>(null)
 
@@ -23,7 +21,9 @@ export const useCart = () => {
     () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [cartItems],
   )
-  const tax = Math.round(subtotal * TAX_RATE)
+  const taxRate = ORDER_TYPE_TAX_RATES[orderType]
+  const taxRatePercent = Math.round(taxRate * 100)
+  const tax = Math.round(subtotal * taxRate)
   const total = subtotal + tax
 
   const addItem = (product: PosProduct) => {
@@ -78,14 +78,14 @@ export const useCart = () => {
     setPaymentErrorMessage(null)
 
     try {
-      await createSale(cartItems, method)
-      window.alert(`会計完了 (${paymentMethodLabels[method]}): ${formatCurrency(total)}`)
+      await createSale(cartItems, method, taxRatePercent)
       setCartItems([])
       setReceiptNumber((currentNumber) => currentNumber + 1)
     } catch (error: unknown) {
       setPaymentErrorMessage(
         error instanceof Error ? error.message : '会計登録に失敗しました。',
       )
+      throw error
     } finally {
       setIsCompletingPayment(false)
     }
@@ -94,11 +94,14 @@ export const useCart = () => {
   return {
     cartItems,
     receiptNumber,
+    orderType,
+    taxRatePercent,
     subtotal,
     tax,
     total,
     addItem,
     changeQuantity,
+    setOrderType,
     clearOrder,
     completePayment,
     isCompletingPayment,

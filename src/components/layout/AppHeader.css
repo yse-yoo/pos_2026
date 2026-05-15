@@ -85,6 +85,12 @@
   font-weight: 700;
 }
 
+.admin-staff-label {
+  color: #dcfce7;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
 .admin-link-button {
   padding: 0.55rem 1rem;
   border-radius: 0.75rem;

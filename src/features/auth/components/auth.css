@@ -1,0 +1,27 @@
+.admin-auth-layout {
+  display: grid;
+  place-items: start center;
+}
+
+.admin-auth-panel {
+  width: min(100%, 32rem);
+  padding: 1.5rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.admin-auth-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-auth-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-auth-field span {
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 800;
+}

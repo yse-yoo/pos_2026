@@ -44,6 +44,7 @@ export const apiRequest = async <T>(
   const isFormData = options.body instanceof FormData
 
   const response = await fetch(buildUrl(path), {
+    credentials: 'include',
     ...options,
     headers: {
       Accept: 'application/json',

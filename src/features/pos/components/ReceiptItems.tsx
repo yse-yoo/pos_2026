@@ -1,5 +1,6 @@
 import { formatCurrency } from '../../../lib/format/currency'
 import type { CartItem } from '../../../types/product'
+import { buildAssetUrl } from '../../../lib/api/client'
 
 type ReceiptItemsProps = {
   items: CartItem[]
@@ -16,8 +17,12 @@ export function ReceiptItems({ items, onChangeQuantity }: ReceiptItemsProps) {
       ) : (
         items.map((item) => (
           <div key={item.id} className="receipt-item">
-            <span className="receipt-item-icon" aria-hidden="true">
-              {item.icon}
+            <span className="" aria-hidden="true">
+              {item.imagePath ? (
+                <img className="admin-product-thumb" src={buildAssetUrl(item.imagePath)} alt="" />
+              ) : (
+                <span className="admin-image-placeholder">{item.icon}</span>
+              )}
             </span>
 
             <div className="receipt-item-body">

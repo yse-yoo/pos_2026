@@ -27,6 +27,7 @@ export type ProductCatalogContextValue = {
   setSelectedStatus: (value: ProductStatusFilter) => void
   createProduct: (payload: ProductFormPayload) => Promise<void>
   updateProduct: (productId: number, payload: ProductFormPayload) => Promise<void>
+  reorderProducts: (orderedProductIds: number[]) => Promise<void>
   deleteProduct: (productId: number) => Promise<void>
   getProductById: (productId: number) => AdminProduct | null
 }

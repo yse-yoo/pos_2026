@@ -1,7 +1,7 @@
 import { ErrorBanner } from '../../../components/feedback/ErrorBanner'
 import { formatReceiptNumber } from '../../../lib/format/receipt'
 import type { CartItem } from '../../../types/product'
-import type { PaymentMethod } from '../hooks/useCart'
+import type { OrderType, PaymentMethod } from '../hooks/useCart'
 import { ReceiptActions } from './ReceiptActions'
 import { ReceiptItems } from './ReceiptItems'
 import { ReceiptSummary } from './ReceiptSummary'
@@ -9,25 +9,31 @@ import { ReceiptSummary } from './ReceiptSummary'
 type ReceiptPanelProps = {
   items: CartItem[]
   receiptNumber: number
+  orderType: OrderType
+  taxRatePercent: number
   subtotal: number
   tax: number
   total: number
   isCompletingPayment: boolean
   paymentErrorMessage: string | null
   onChangeQuantity: (productId: number, delta: number) => void
+  onChangeOrderType: (orderType: OrderType) => void
   onClearOrder: () => void
-  onCompletePayment: (method: PaymentMethod) => Promise<void>
+  onCompletePayment: (method: PaymentMethod, displayLabel?: string) => Promise<void>
 }
 
 export function ReceiptPanel({
   items,
   receiptNumber,
+  orderType,
+  taxRatePercent,
   subtotal,
   tax,
   total,
   isCompletingPayment,
   paymentErrorMessage,
   onChangeQuantity,
+  onChangeOrderType,
   onClearOrder,
   onCompletePayment,
 }: ReceiptPanelProps) {
@@ -45,7 +51,14 @@ export function ReceiptPanel({
       ) : null}
 
       <ReceiptItems items={items} onChangeQuantity={onChangeQuantity} />
-      <ReceiptSummary subtotal={subtotal} tax={tax} total={total} />
+      <ReceiptSummary
+        orderType={orderType}
+        taxRatePercent={taxRatePercent}
+        subtotal={subtotal}
+        tax={tax}
+        total={total}
+        onChangeOrderType={onChangeOrderType}
+      />
       <ReceiptActions
         hasItems={hasItems}
         isCompletingPayment={isCompletingPayment}

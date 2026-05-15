@@ -1,6 +1,5 @@
+import { useState } from 'react'
 import { Button } from '../../components/actions/Button'
-import { InfoPairList } from '../../components/data-display/InfoPairList'
-import { ResponsiveTable, type ResponsiveTableColumn } from '../../components/data-display/ResponsiveTable'
 import { SummaryCard } from '../../components/data-display/SummaryCard'
 import { EmptyState } from '../../components/feedback/EmptyState'
 import { ErrorBanner } from '../../components/feedback/ErrorBanner'
@@ -10,57 +9,40 @@ import { PageHeader } from '../../components/layout/PageHeader'
 import { PagePanel } from '../../components/layout/PagePanel'
 import { formatCurrency } from '../../lib/format/currency'
 import { formatSoldAt } from '../../lib/format/dateTime'
-import type { SalesHistoryItem } from '../../types/sales'
+import type { SalesHistoryDetail } from '../../types/sales'
+import { getSalesHistoryDetail } from './api/salesHistoryRepository'
 import { useSalesHistory } from './hooks/useSalesHistory'
 import { getPaymentMethodTone } from './model/paymentMethod'
 import './sales-history.css'
 
-const columns: ResponsiveTableColumn<SalesHistoryItem>[] = [
-  {
-    key: 'soldAt',
-    header: '会計日時',
-    render: (sale) => formatSoldAt(sale.soldAt),
-  },
-  {
-    key: 'receiptNumber',
-    header: '伝票番号',
-    render: (sale) => <StatusChip mono>{sale.receiptNumber}</StatusChip>,
-  },
-  {
-    key: 'itemCount',
-    header: '注文点数',
-    render: (sale) => `${sale.itemCount}点`,
-  },
-  {
-    key: 'totalAmount',
-    header: '合計金額',
-    className: 'history-total-cell',
-    render: (sale) => formatCurrency(sale.totalAmount),
-  },
-  {
-    key: 'paymentMethod',
-    header: '支払方法',
-    render: (sale) => (
-      <StatusChip tone={getPaymentMethodTone(sale.paymentMethod)}>{sale.paymentMethod}</StatusChip>
-    ),
-  },
-  {
-    key: 'actions',
-    header: '操作',
-    render: (sale) => (
-      <Button variant="primary" className="history-detail-button" onClick={() => openSaleDetail(sale.id)}>
-        詳細を見る
-      </Button>
-    ),
-  },
-]
-
-const openSaleDetail = (saleId: number) => {
-  window.alert(`売上詳細画面 (/sales/${saleId}) はモック未実装です。`)
-}
-
 export function SalesHistoryPage() {
   const { salesHistory, isLoading, isRefreshing, errorMessage, refresh } = useSalesHistory()
+  const [selectedSaleDetail, setSelectedSaleDetail] = useState<SalesHistoryDetail | null>(null)
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
+  const [detailErrorMessage, setDetailErrorMessage] = useState<string | null>(null)
+
+  const openSaleDetail = async (saleId: number) => {
+    setIsLoadingDetail(true)
+    setDetailErrorMessage(null)
+    setSelectedSaleDetail(null)
+
+    try {
+      setSelectedSaleDetail(await getSalesHistoryDetail(saleId))
+    } catch (error: unknown) {
+      setDetailErrorMessage(
+        error instanceof Error ? error.message : '売上詳細の取得に失敗しました。',
+      )
+    } finally {
+      setIsLoadingDetail(false)
+    }
+  }
+
+  const closeSaleDetail = () => {
+    if (!isLoadingDetail) {
+      setSelectedSaleDetail(null)
+      setDetailErrorMessage(null)
+    }
+  }
 
   return (
     <div className="history-layout">
@@ -104,13 +86,50 @@ export function SalesHistoryPage() {
               </div>
             ) : null}
 
-            <ResponsiveTable
-              data={salesHistory}
-              columns={columns}
-              tableClassName="history-table"
-              mobileListClassName="history-mobile-list"
-              renderMobileCard={(sale) => (
-                <article className="history-mobile-card">
+            <div className="history-table-scroll">
+              <table className="history-table">
+                <thead>
+                  <tr>
+                    <th scope="col">会計日時</th>
+                    <th scope="col">伝票番号</th>
+                    <th scope="col">注文点数</th>
+                    <th scope="col" className="history-total-cell">合計金額</th>
+                    <th scope="col">支払方法</th>
+                    <th scope="col">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {salesHistory.map((sale) => (
+                    <tr key={sale.id}>
+                      <td>{formatSoldAt(sale.soldAt)}</td>
+                      <td>
+                        <StatusChip mono>{sale.receiptNumber}</StatusChip>
+                      </td>
+                      <td>{sale.itemCount}点</td>
+                      <td className="history-total-cell">{formatCurrency(sale.totalAmount)}</td>
+                      <td>
+                        <StatusChip tone={getPaymentMethodTone(sale.paymentMethod)}>
+                          {sale.paymentMethod}
+                        </StatusChip>
+                      </td>
+                      <td>
+                        <Button
+                          variant="primary"
+                          className="history-detail-button"
+                          onClick={() => void openSaleDetail(sale.id)}
+                        >
+                          詳細を見る
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="history-mobile-list">
+              {salesHistory.map((sale) => (
+                <article key={sale.id} className="history-mobile-card">
                   <div className="history-mobile-head">
                     <div>
                       <span className="history-mobile-label">会計日時</span>
@@ -119,34 +138,139 @@ export function SalesHistoryPage() {
                     <StatusChip mono>{sale.receiptNumber}</StatusChip>
                   </div>
 
-                  <InfoPairList
-                    items={[
-                      { label: '注文点数', value: `${sale.itemCount}点` },
-                      {
-                        label: '合計金額',
-                        value: <span className="history-mobile-total">{formatCurrency(sale.totalAmount)}</span>,
-                      },
-                      {
-                        label: '支払方法',
-                        value: (
-                          <StatusChip tone={getPaymentMethodTone(sale.paymentMethod)}>
-                            {sale.paymentMethod}
-                          </StatusChip>
-                        ),
-                      },
-                    ]}
-                    className="history-mobile-meta"
-                  />
+                  <dl className="history-mobile-meta">
+                    <div className="history-mobile-meta-row">
+                      <dt>注文点数</dt>
+                      <dd>{sale.itemCount}点</dd>
+                    </div>
+                    <div className="history-mobile-meta-row">
+                      <dt>合計金額</dt>
+                      <dd>
+                        <span className="history-mobile-total">
+                          {formatCurrency(sale.totalAmount)}
+                        </span>
+                      </dd>
+                    </div>
+                    <div className="history-mobile-meta-row">
+                      <dt>支払方法</dt>
+                      <dd>
+                        <StatusChip tone={getPaymentMethodTone(sale.paymentMethod)}>
+                          {sale.paymentMethod}
+                        </StatusChip>
+                      </dd>
+                    </div>
+                  </dl>
 
-                  <Button variant="primary" className="history-mobile-button" onClick={() => openSaleDetail(sale.id)}>
+                  <Button variant="primary" className="history-mobile-button" onClick={() => void openSaleDetail(sale.id)}>
                     詳細を見る
                   </Button>
                 </article>
-              )}
-            />
+              ))}
+            </div>
           </div>
         )}
       </PagePanel>
+
+      {isLoadingDetail || detailErrorMessage || selectedSaleDetail ? (
+        <div className="history-detail-backdrop" role="presentation">
+          <div
+            className="history-detail-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="history-detail-title"
+          >
+            <div className="history-detail-header">
+              <div>
+                <span>売上詳細</span>
+                <h3 id="history-detail-title">
+                  {selectedSaleDetail?.receiptNumber ?? '読み込み中'}
+                </h3>
+              </div>
+              <Button className="px-4 py-2" variant="ghost" onClick={closeSaleDetail} disabled={isLoadingDetail}>
+                閉じる
+              </Button>
+            </div>
+
+            {isLoadingDetail ? (
+              <div className="history-detail-loading" aria-live="polite">
+                <span className="loading-spinner" aria-hidden="true" />
+                <span>詳細を読み込み中...</span>
+              </div>
+            ) : null}
+
+            {detailErrorMessage ? (
+              <ErrorBanner title="売上詳細取得に失敗しました" message={detailErrorMessage} />
+            ) : null}
+
+            {selectedSaleDetail ? (
+              <SaleDetailContent sale={selectedSaleDetail} />
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+type SaleDetailContentProps = {
+  sale: SalesHistoryDetail
+}
+
+function SaleDetailContent({ sale }: SaleDetailContentProps) {
+  return (
+    <div className="history-detail-content">
+      <dl className="history-detail-meta">
+        <div>
+          <dt>会計日時</dt>
+          <dd>{formatSoldAt(sale.soldAt)}</dd>
+        </div>
+        <div>
+          <dt>支払方法</dt>
+          <dd>
+            <StatusChip tone={getPaymentMethodTone(sale.paymentMethod)}>
+              {sale.paymentMethod}
+            </StatusChip>
+          </dd>
+        </div>
+        <div>
+          <dt>注文点数</dt>
+          <dd>{sale.itemCount}点</dd>
+        </div>
+        <div>
+          <dt>状態</dt>
+          <dd>{sale.status || 'completed'}</dd>
+        </div>
+      </dl>
+
+      <div className="history-detail-items">
+        {sale.items.map((item) => (
+          <div key={item.id} className="history-detail-item">
+            <div>
+              <strong>{item.productName}</strong>
+              <span>{item.categoryName}</span>
+            </div>
+            <div className="history-detail-item-numbers">
+              <span>{formatCurrency(item.unitPrice)} x {item.quantity}</span>
+              <strong>{formatCurrency(item.total)}</strong>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="history-detail-summary">
+        <div>
+          <span>小計</span>
+          <strong>{formatCurrency(sale.subtotal)}</strong>
+        </div>
+        <div>
+          <span>消費税</span>
+          <strong>{formatCurrency(sale.taxTotal)}</strong>
+        </div>
+        <div className="history-detail-total">
+          <span>合計金額</span>
+          <strong>{formatCurrency(sale.totalAmount)}</strong>
+        </div>
+      </div>
     </div>
   )
 }

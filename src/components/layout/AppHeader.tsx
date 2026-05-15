@@ -5,10 +5,12 @@ import './AppHeader.css'
 
 type AppHeaderProps = {
   activeView: ViewName
+  staffName: string | null
   onViewChange: (viewName: ViewName) => void
+  onLogout: () => void
 }
 
-export function AppHeader({ activeView, onViewChange }: AppHeaderProps) {
+export function AppHeader({ activeView, staffName, onViewChange, onLogout }: AppHeaderProps) {
   const clockLabel = useClock()
 
   return (
@@ -27,13 +29,22 @@ export function AppHeader({ activeView, onViewChange }: AppHeaderProps) {
 
         <div className="app-header-actions">
           <span className="clock-display">{clockLabel}</span>
-          <button
-            type="button"
-            className="admin-link-button"
-            onClick={() => window.alert('管理者メニューは今後の画面で対応予定です。')}
-          >
-            管理者
-          </button>
+          {staffName ? (
+            <>
+              <span className="admin-staff-label">{staffName}</span>
+              <button type="button" className="admin-link-button" onClick={onLogout}>
+                ログアウト
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="admin-link-button"
+              onClick={() => onViewChange('products')}
+            >
+              管理者
+            </button>
+          )}
         </div>
       </div>
     </header>

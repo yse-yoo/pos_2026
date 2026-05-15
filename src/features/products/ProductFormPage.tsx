@@ -69,7 +69,7 @@ export function ProductFormPage({ mode, productId, onBack }: ProductFormPageProp
             title="商品が見つかりません"
             description="対象の商品が存在しないため、一覧画面へ戻って確認してください。"
             action={
-              <Button variant="primary" onClick={onBack}>
+              <Button className="px-4 py-2" variant="primary" onClick={onBack}>
                 商品一覧へ戻る
               </Button>
             }
@@ -327,7 +327,7 @@ export function ProductFormPage({ mode, productId, onBack }: ProductFormPageProp
             <Button variant="ghost" onClick={onBack}>
               キャンセル
             </Button>
-            <Button type="submit" variant="primary" disabled={isSaving || categories.length === 0}>
+            <Button className="px-4 py-2" type="submit" variant="primary" disabled={isSaving || categories.length === 0}>
               {isSaving ? '保存中...' : '保存'}
             </Button>
           </div>
