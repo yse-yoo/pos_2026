@@ -1,29 +1,32 @@
+import { Link } from 'react-router-dom'
+import { productListPath } from '../../routing/appRoute'
 import type { ViewName } from '../../types/app-route'
 
 type MainNavigationProps = {
   activeView: ViewName
-  onViewChange: (viewName: ViewName) => void
 }
 
-const navItems: Array<{ key: ViewName; label: string }> = [
-  { key: 'pos', label: 'レジ' },
-  { key: 'history', label: '履歴' },
-  { key: 'products', label: '商品管理' },
-]
-
-export function MainNavigation({ activeView, onViewChange }: MainNavigationProps) {
+export function MainNavigation({ activeView }: MainNavigationProps) {
   return (
     <nav className="main-navigation" aria-label="メインナビゲーション">
-      {navItems.map((item) => (
-        <button
-          key={item.key}
-          type="button"
-          className={`main-navigation-button${activeView === item.key ? ' is-active' : ''}`}
-          onClick={() => onViewChange(item.key)}
-        >
-          {item.label}
-        </button>
-      ))}
+      <Link
+        to="/"
+        className={`main-navigation-button${activeView === 'pos' ? ' is-active' : ''}`}
+      >
+        レジ
+      </Link>
+      <Link
+        to="/sales/history"
+        className={`main-navigation-button${activeView === 'history' ? ' is-active' : ''}`}
+      >
+        履歴
+      </Link>
+      <Link
+        to={productListPath}
+        className={`main-navigation-button${activeView === 'products' ? ' is-active' : ''}`}
+      >
+        商品管理
+      </Link>
     </nav>
   )
 }

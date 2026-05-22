@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/actions/Button'
 import { SummaryCard } from '../components/data-display/SummaryCard'
 import { EmptyState } from '../components/feedback/EmptyState'
@@ -6,18 +7,15 @@ import { ErrorBanner } from '../components/feedback/ErrorBanner'
 import { LoadingState } from '../components/feedback/LoadingState'
 import { PageHeader } from '../components/layout/PageHeader'
 import { PagePanel } from '../components/layout/PagePanel'
-import type { AppRoute } from '../types/app-route'
+import { getProductEditPath, productCreatePath } from '../routing/appRoute'
 import type { StatusFilter } from '../types/product'
 import { ProductListRow } from './components/ProductListRow'
 import { ProductMobileCard } from './components/ProductMobileCard'
 import { useProductCatalog } from './hooks/useProductCatalog'
 import './products.css'
 
-type ProductListPageProps = {
-  onNavigate: (route: AppRoute) => void
-}
-
-export function ProductListPage({ onNavigate }: ProductListPageProps) {
+export function ProductListPage() {
+  const navigate = useNavigate()
   const {
     categories,
     filteredProducts,
@@ -138,7 +136,7 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
                   <Button
                     variant="primary"
                     className="p-2 admin-create-button"
-                    onClick={() => onNavigate({ view: 'products', screen: 'create' })}
+                    onClick={() => navigate(productCreatePath)}
                   >
                     新規登録
                   </Button>
@@ -259,7 +257,7 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
                         categoryName={categoryNameById.get(product.categoryId) ?? ''}
                         isSortMode={isSortMode}
                         isDragging={draggingProductId === product.id}
-                        onNavigate={onNavigate}
+                        onEditProduct={(productId) => navigate(getProductEditPath(productId))}
                         onDeleteProduct={handleDeleteProduct}
                         onDragStart={setDraggingProductId}
                         onDragEnter={moveSortableProduct}
@@ -277,7 +275,7 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
                   key={product.id}
                   product={product}
                   categoryName={categoryNameById.get(product.categoryId) ?? ''}
-                  onNavigate={onNavigate}
+                  onEditProduct={(productId) => navigate(getProductEditPath(productId))}
                   onDeleteProduct={handleDeleteProduct}
                 />
               ))}

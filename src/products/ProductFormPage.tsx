@@ -5,7 +5,6 @@ import { LoadingState } from '../components/feedback/LoadingState'
 import { PageHeader } from '../components/layout/PageHeader'
 import { PagePanel } from '../components/layout/PagePanel'
 import { buildAssetUrl } from '../lib/api/client'
-import type { ProductScreen } from '../types/app-route'
 import type { FormField } from '../types/product'
 import { useProductCatalog } from './hooks/useProductCatalog'
 import { uploadProductImage } from './api/productCatalogRepository'
@@ -18,9 +17,10 @@ import './products.css'
 
 const IMAGE_MAX_SIZE = 2 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+type ProductFormMode = 'create' | 'edit'
 
 type ProductFormPageProps = {
-  mode: Exclude<ProductScreen, 'list'>
+  mode: ProductFormMode
   productId?: number
   onBack: () => void
 }

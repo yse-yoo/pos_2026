@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useClock } from '../../hooks/useClock'
 import type { ViewName } from '../../types/app-route'
 import { MainNavigation } from './MainNavigation'
@@ -6,11 +7,10 @@ import './AppHeader.css'
 type AppHeaderProps = {
   activeView: ViewName
   staffName: string | null
-  onViewChange: (viewName: ViewName) => void
   onLogout: () => void
 }
 
-export function AppHeader({ activeView, staffName, onViewChange, onLogout }: AppHeaderProps) {
+export function AppHeader({ activeView, staffName, onLogout }: AppHeaderProps) {
   const clockLabel = useClock()
 
   return (
@@ -21,11 +21,11 @@ export function AppHeader({ activeView, staffName, onViewChange, onLogout }: App
             🌿
           </span>
           <span className="brand-title">
-            <a href="/" className="text-white">SmartPOS</a>
+            <Link to="/" className="text-white">SmartPOS</Link>
           </span>
         </div>
 
-        <MainNavigation activeView={activeView} onViewChange={onViewChange} />
+        <MainNavigation activeView={activeView} />
 
         <div className="app-header-actions">
           <span className="clock-display">{clockLabel}</span>
@@ -37,13 +37,9 @@ export function AppHeader({ activeView, staffName, onViewChange, onLogout }: App
               </button>
             </>
           ) : (
-            <button
-              type="button"
-              className="admin-link-button"
-              onClick={() => onViewChange('products')}
-            >
+            <Link to="/product" className="admin-link-button">
               管理者
-            </button>
+            </Link>
           )}
         </div>
       </div>

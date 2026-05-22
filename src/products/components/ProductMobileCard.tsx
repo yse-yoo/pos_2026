@@ -2,20 +2,19 @@ import { Button } from '../../components/actions/Button'
 import { StatusChip } from '../../components/feedback/StatusChip'
 import { buildAssetUrl } from '../../lib/api/client'
 import { formatCurrency } from '../../lib/format/currency'
-import type { AppRoute } from '../../types/app-route'
 import type { AdminProduct } from '../../types/product'
 
 type ProductMobileCardProps = {
   product: AdminProduct
   categoryName: string
-  onNavigate: (route: AppRoute) => void
+  onEditProduct: (productId: number) => void
   onDeleteProduct: (productId: number) => void
 }
 
 export function ProductMobileCard({
   product,
   categoryName,
-  onNavigate,
+  onEditProduct,
   onDeleteProduct,
 }: ProductMobileCardProps) {
   return (
@@ -56,12 +55,7 @@ export function ProductMobileCard({
       </dl>
 
       <div className="admin-mobile-actions">
-        <Button
-          variant="secondary"
-          onClick={() =>
-            onNavigate({ view: 'products', screen: 'edit', productId: product.id })
-          }
-        >
+        <Button variant="secondary" onClick={() => onEditProduct(product.id)}>
           編集
         </Button>
         <Button variant="danger" onClick={() => onDeleteProduct(product.id)}>

@@ -1,13 +1,14 @@
 import './App.css'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AppHeader } from './components/layout/AppHeader'
 import { AdminLoginPage } from './auth/components/AdminLoginPage'
 import { AuthProvider } from './auth/hooks/AuthProvider'
 import { useAuth } from './auth/hooks/useAuth'
-import { useAppRoute } from './hooks/useAppRoute'
-import { routeToViewName } from './lib/routing/appRoute'
+import { getViewNameFromPath } from './routing/appRoute'
 import { PosPage } from './pos/PosPage'
+import { ProductCreatePage, ProductEditPage } from './products/ProductFormRoutes'
 import { ProductCatalogProvider } from './products/hooks/ProductCatalogProvider'
-import { ProductsPage } from './products/ProductsPage'
+import { ProductListPage } from './products/ProductListPage'
 import { SalesHistoryPage } from './sales-history/SalesHistoryPage'
 
 function App() {
@@ -19,29 +20,33 @@ function App() {
 }
 
 function AuthenticatedApp() {
-  const { route, navigateToRoute, navigateToView } = useAppRoute()
+  const location = useLocation()
   const { staff, logout } = useAuth()
-  const isAdminRoute = route.view === 'history' || route.view === 'products'
+  const activeView = getViewNameFromPath(location.pathname)
+  const isAdminRoute = activeView === 'history' || activeView === 'products'
 
   return (
     <ProductCatalogProvider>
       <div className="app-shell">
         <AppHeader
-          activeView={routeToViewName(route)}
+          activeView={activeView}
           staffName={staff?.name ?? null}
-          onViewChange={navigateToView}
           onLogout={() => void logout()}
         />
 
         <main className="app-main">
-          {route.view === 'pos' ? (
-            <PosPage />
-          ) : isAdminRoute && !staff ? (
+          {isAdminRoute && !staff ? (
             <AdminLoginPage />
-          ) : route.view === 'history' ? (
-            <SalesHistoryPage />
           ) : (
-            <ProductsPage route={route} onNavigate={navigateToRoute} />
+            <Routes>
+              <Route path="/" element={<PosPage />} />
+              <Route path="/pos" element={<Navigate to="/" replace />} />
+              <Route path="/sales/history" element={<SalesHistoryPage />} />
+              <Route path="/product" element={<ProductListPage />} />
+              <Route path="/product/create" element={<ProductCreatePage />} />
+              <Route path="/product/:productId/edit" element={<ProductEditPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           )}
         </main>
       </div>

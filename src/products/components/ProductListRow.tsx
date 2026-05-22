@@ -2,7 +2,6 @@ import { Button } from '../../components/actions/Button'
 import { StatusChip } from '../../components/feedback/StatusChip'
 import { buildAssetUrl } from '../../lib/api/client'
 import { formatCurrency } from '../../lib/format/currency'
-import type { AppRoute } from '../../types/app-route'
 import type { AdminProduct } from '../../types/product'
 
 type ProductListRowProps = {
@@ -10,7 +9,7 @@ type ProductListRowProps = {
   categoryName: string
   isSortMode?: boolean
   isDragging?: boolean
-  onNavigate: (route: AppRoute) => void
+  onEditProduct: (productId: number) => void
   onDeleteProduct: (productId: number) => void
   onDragStart?: (productId: number) => void
   onDragEnter?: (productId: number) => void
@@ -22,7 +21,7 @@ export function ProductListRow({
   categoryName,
   isSortMode = false,
   isDragging = false,
-  onNavigate,
+  onEditProduct,
   onDeleteProduct,
   onDragStart,
   onDragEnter,
@@ -89,9 +88,7 @@ export function ProductListRow({
             <Button
               variant="secondary"
               className="row-action-button"
-              onClick={() =>
-                onNavigate({ view: 'products', screen: 'edit', productId: product.id })
-              }
+              onClick={() => onEditProduct(product.id)}
             >
               編集
             </Button>
