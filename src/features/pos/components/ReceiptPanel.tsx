@@ -61,6 +61,7 @@ export function ReceiptPanel({
       />
       <ReceiptActions
         hasItems={hasItems}
+        receiptNumber={receiptNumber}
         isCompletingPayment={isCompletingPayment}
         onClearOrder={onClearOrder}
         onCompletePayment={onCompletePayment}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
+import { useEffect, useState, type PropsWithChildren } from 'react'
 import type { StaffUser } from '../api/authRepository'
 import { getCurrentStaff, loginStaff, logoutStaff } from '../api/authRepository'
 import { AuthContext } from './AuthContext'
@@ -31,7 +31,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   }, [])
 
-  const login = useCallback(async (loginId: string, password: string) => {
+  const login = async (loginId: string, password: string) => {
     setLoginErrorMessage(null)
 
     try {
@@ -41,24 +41,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setLoginErrorMessage(message)
       throw error
     }
-  }, [])
+  }
 
-  const logout = useCallback(async () => {
+  const logout = async () => {
     await logoutStaff()
     setStaff(null)
     setLoginErrorMessage(null)
-  }, [])
+  }
 
-  const value = useMemo(
-    () => ({
-      staff,
-      isCheckingAuth,
-      loginErrorMessage,
-      login,
-      logout,
-    }),
-    [staff, isCheckingAuth, loginErrorMessage, login, logout],
+  return (
+    <AuthContext.Provider value={{ staff, isCheckingAuth, loginErrorMessage, login, logout }}>
+      {children}
+    </AuthContext.Provider>
   )
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

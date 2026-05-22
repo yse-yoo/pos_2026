@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getPathForRoute, resolveRouteFromPath } from '../lib/routing/appRoute'
 import type { AppRoute, ViewName } from '../types/app-route'
 
@@ -24,26 +24,23 @@ export const useAppRoute = () => {
     }
   }, [])
 
-  const navigateToRoute = useCallback((nextRoute: AppRoute) => {
+  const navigateToRoute = (nextRoute: AppRoute) => {
     setRoute(nextRoute)
 
     const nextPath = getPathForRoute(nextRoute)
     if (window.location.pathname !== nextPath) {
       window.history.pushState(nextRoute, '', nextPath)
     }
-  }, [])
+  }
 
-  const navigateToView = useCallback(
-    (viewName: ViewName) => {
-      if (viewName === 'products') {
-        navigateToRoute({ view: 'products', screen: 'list' })
-        return
-      }
+  const navigateToView = (viewName: ViewName) => {
+    if (viewName === 'products') {
+      navigateToRoute({ view: 'products', screen: 'list' })
+      return
+    }
 
-      navigateToRoute({ view: viewName })
-    },
-    [navigateToRoute],
-  )
+    navigateToRoute({ view: viewName })
+  }
 
   return {
     route,

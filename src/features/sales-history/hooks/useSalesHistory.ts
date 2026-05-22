@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { listSalesHistory } from '../api/salesHistoryRepository'
 import type { SalesHistoryItem } from '../../../types/sales'
 
@@ -9,7 +9,7 @@ export const useSalesHistory = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const hasLoaded = useRef(false)
 
-  const load = useCallback(async (refresh: boolean) => {
+  const load = async (refresh: boolean) => {
     if (refresh) {
       setIsRefreshing(true)
     } else {
@@ -32,7 +32,7 @@ export const useSalesHistory = () => {
         setIsLoading(false)
       }
     }
-  }, [])
+  }
 
   useEffect(() => {
     if (hasLoaded.current) {

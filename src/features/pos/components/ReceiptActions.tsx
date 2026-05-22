@@ -1,8 +1,10 @@
 import { type ReactNode, useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import { Button } from '../../../components/actions/Button'
+import { formatReceiptNumber } from '../../../lib/format/receipt'
 import type { PaymentMethod } from '../hooks/useCart'
 
-type PaymentDialog = 'cash' | 'electronic' | 'choose' | 'processing' | 'completed' | null
+type PaymentDialog = 'cash' | 'electronic' | 'qr' | 'processing' | 'completed' | null
 type ElectronicPaymentOption = {
   method: PaymentMethod
   label: string
@@ -20,11 +22,6 @@ const electronicPaymentOptions: ElectronicPaymentOption[] = [
     label: 'クレジット',
     instruction: 'クレジットカードを端末にタッチ、または差し込んでください。',
   },
-  {
-    method: 'qr',
-    label: 'QR',
-    instruction: 'QRコードを読み取ってください。',
-  },
 ]
 
 const PAYMENT_PROCESSING_DELAY_MS = 2200
@@ -36,6 +33,7 @@ const wait = (duration: number) =>
 
 type ReceiptActionsProps = {
   hasItems: boolean
+  receiptNumber: number
   isCompletingPayment: boolean
   onClearOrder: () => void
   onCompletePayment: (method: PaymentMethod, displayLabel?: string) => Promise<void>
@@ -43,6 +41,7 @@ type ReceiptActionsProps = {
 
 export function ReceiptActions({
   hasItems,
+  receiptNumber,
   isCompletingPayment,
   onClearOrder,
   onCompletePayment,
@@ -85,6 +84,8 @@ export function ReceiptActions({
     }
   }
 
+  const qrValue = formatReceiptNumber(receiptNumber)
+
   return (
     <>
       <div className="receipt-actions">
@@ -98,6 +99,14 @@ export function ReceiptActions({
           disabled={isDisabled}
         >
           現金
+        </Button>
+        <Button
+          variant="secondary"
+          className="px-4 py-2"
+          onClick={() => openDialog('qr')}
+          disabled={isDisabled}
+        >
+          QR
         </Button>
         <Button
           variant="secondary"
@@ -136,6 +145,33 @@ export function ReceiptActions({
               />
             ) : null}
 
+            {paymentDialog === 'qr' ? (
+              <PaymentDialogContent
+                title="QR決済"
+                message="QRコードをお客様に提示し、読み取っていただいてください。"
+                isCompletingPayment={isCompletingPayment}
+                onCancel={closeDialog}
+                body={
+                  <div className="flex flex-col items-center gap-3 py-2">
+                    <div className="p-3 bg-white rounded-xl border border-[#e2e8f0]">
+                      <QRCodeSVG value={qrValue} size={180} />
+                    </div>
+                    <span className="font-mono text-sm font-bold text-slate-500">{qrValue}</span>
+                  </div>
+                }
+                actions={
+                  <Button
+                    className="px-4 py-2"
+                    variant="primary"
+                    onClick={() => void completePayment('qr', 'QR')}
+                    disabled={isCompletingPayment}
+                  >
+                    決済を確定
+                  </Button>
+                }
+              />
+            ) : null}
+
             {paymentDialog === 'electronic' ? (
               <PaymentDialogContent
                 title="電子決済"
@@ -153,35 +189,6 @@ export function ReceiptActions({
                     onSelectPayment={setSelectedElectronicPayment}
                     onComplete={completePayment}
                   />
-                }
-              />
-            ) : null}
-
-            {paymentDialog === 'choose' ? (
-              <PaymentDialogContent
-                title="会計確定"
-                message="支払方法を選択してください。"
-                isCompletingPayment={isCompletingPayment}
-                onCancel={closeDialog}
-                actions={
-                  <>
-                    <Button
-                      className="px-4 py-2"
-                      variant="secondary"
-                      onClick={() => openDialog('cash')}
-                      disabled={isCompletingPayment}
-                    >
-                      現金
-                    </Button>
-                    <Button
-                      className="px-4 py-2"
-                      variant="primary"
-                      onClick={() => openDialog('electronic')}
-                      disabled={isCompletingPayment}
-                    >
-                      電子決済
-                    </Button>
-                  </>
                 }
               />
             ) : null}
@@ -251,6 +258,7 @@ type PaymentDialogContentProps = {
   message: string
   isCompletingPayment: boolean
   actions: ReactNode
+  body?: ReactNode
   onCancel: () => void
 }
 
@@ -259,6 +267,7 @@ function PaymentDialogContent({
   message,
   isCompletingPayment,
   actions,
+  body,
   onCancel,
 }: PaymentDialogContentProps) {
   return (
@@ -267,6 +276,8 @@ function PaymentDialogContent({
         <h3 id="payment-dialog-title">{title}</h3>
         <p>{message}</p>
       </div>
+
+      {body ?? null}
 
       <div className="payment-dialog-actions">
         <Button className="px-4 py-2" variant="ghost" onClick={onCancel} disabled={isCompletingPayment}>

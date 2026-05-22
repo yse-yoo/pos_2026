@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import type { CartItem, PosProduct } from '../../../types/product'
 import { createSale } from '../api/saleRepository'
 
@@ -17,10 +17,7 @@ export const useCart = () => {
   const [isCompletingPayment, setIsCompletingPayment] = useState(false)
   const [paymentErrorMessage, setPaymentErrorMessage] = useState<string | null>(null)
 
-  const subtotal = useMemo(
-    () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    [cartItems],
-  )
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const taxRate = ORDER_TYPE_TAX_RATES[orderType]
   const taxRatePercent = Math.round(taxRate * 100)
   const tax = Math.round(subtotal * taxRate)

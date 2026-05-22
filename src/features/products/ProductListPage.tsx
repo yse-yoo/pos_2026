@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Button } from '../../components/actions/Button'
 import { SummaryCard } from '../../components/data-display/SummaryCard'
 import { EmptyState } from '../../components/feedback/EmptyState'
@@ -41,10 +41,7 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
   const [draggingProductId, setDraggingProductId] = useState<number | null>(null)
   const [isSavingOrder, setIsSavingOrder] = useState(false)
 
-  const productById = useMemo(
-    () => new Map(products.map((product) => [product.id, product])),
-    [products],
-  )
+  const productById = new Map(products.map((product) => [product.id, product]))
   const visibleProducts = isSortMode
     ? sortableProductIds
         .map((productId) => productById.get(productId))

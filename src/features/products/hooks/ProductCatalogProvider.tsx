@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react'
+import { useEffect, useRef, useState, type PropsWithChildren } from 'react'
 import type { AdminProduct, ProductCategoryName, ProductFormPayload, ProductStatusFilter } from '../../../types/product'
 import { mapAdminProductsToPosProducts } from '../../pos/model/mapAdminProductsToPosProducts'
 import {
@@ -21,7 +21,7 @@ export function ProductCatalogProvider({ children }: PropsWithChildren) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const hasLoaded = useRef(false)
 
-  const reloadCatalog = useCallback(async () => {
+  const reloadCatalog = async () => {
     setIsLoading(true)
     setErrorMessage(null)
 
@@ -40,7 +40,7 @@ export function ProductCatalogProvider({ children }: PropsWithChildren) {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }
 
   useEffect(() => {
     if (hasLoaded.current) {
@@ -51,33 +51,19 @@ export function ProductCatalogProvider({ children }: PropsWithChildren) {
     void reloadCatalog()
   }, [reloadCatalog])
 
-  const categoryNameById = useMemo(
-    () =>
-      new Map<number, ProductCategoryName>(
-        categories.map((category) => [category.id, category.name]),
-      ),
-    [categories],
+  const categoryNameById = new Map<number, ProductCategoryName>(
+    categories.map((category) => [category.id, category.name]),
   )
 
-  const filteredProducts = useMemo(
-    () =>
-      filterAdminProducts(products, {
-        searchKeyword,
-        selectedCategoryId,
-        selectedStatus,
-      }),
-    [products, searchKeyword, selectedCategoryId, selectedStatus],
-  )
+  const filteredProducts = filterAdminProducts(products, {
+    searchKeyword,
+    selectedCategoryId,
+    selectedStatus,
+  })
 
-  const posProducts = useMemo(
-    () => mapAdminProductsToPosProducts(products, categoryNameById),
-    [products, categoryNameById],
-  )
+  const posProducts = mapAdminProductsToPosProducts(products, categoryNameById)
 
-  const activeProductCount = useMemo(
-    () => products.filter((product) => product.isActive).length,
-    [products],
-  )
+  const activeProductCount = products.filter((product) => product.isActive).length
 
   const createProduct = async (payload: ProductFormPayload) => {
     await createProductRequest(payload)
