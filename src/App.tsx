@@ -1,14 +1,14 @@
 import './App.css'
 import { AppHeader } from './components/layout/AppHeader'
-import { AdminLoginPage } from './features/auth/components/AdminLoginPage'
-import { AuthProvider } from './features/auth/hooks/AuthProvider'
-import { useAuth } from './features/auth/hooks/useAuth'
+import { AdminLoginPage } from './auth/components/AdminLoginPage'
+import { AuthProvider } from './auth/hooks/AuthProvider'
+import { useAuth } from './auth/hooks/useAuth'
 import { useAppRoute } from './hooks/useAppRoute'
 import { routeToViewName } from './lib/routing/appRoute'
-import { PosPage } from './features/pos/PosPage'
-import { ProductCatalogProvider } from './features/products/hooks/ProductCatalogProvider'
-import { ProductsPage } from './features/products/ProductsPage'
-import { SalesHistoryPage } from './features/sales-history/SalesHistoryPage'
+import { PosPage } from './pos/PosPage'
+import { ProductCatalogProvider } from './products/hooks/ProductCatalogProvider'
+import { ProductsPage } from './products/ProductsPage'
+import { SalesHistoryPage } from './sales-history/SalesHistoryPage'
 
 function App() {
   return (
