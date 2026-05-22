@@ -1,9 +1,9 @@
-import type { AdminProduct, ProductStatusFilter } from '../../../types/product'
+import type { AdminProduct, StatusFilter } from '../../../types/product'
 
 type ProductCatalogFilters = {
   searchKeyword: string
   selectedCategoryId: string
-  selectedStatus: ProductStatusFilter
+  selectedStatus: StatusFilter
 }
 
 export const sortAdminProducts = (left: AdminProduct, right: AdminProduct) =>

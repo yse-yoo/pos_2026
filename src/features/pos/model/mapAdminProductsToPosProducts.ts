@@ -1,8 +1,9 @@
-import type { AdminProduct, PosProduct, ProductCategoryName } from '../../../types/product'
+import type { CategoryName } from '../../../types/category'
+import type { AdminProduct, PosProduct } from '../../../types/product'
 
 export const mapAdminProductsToPosProducts = (
   products: AdminProduct[],
-  categoryNameById: Map<number, ProductCategoryName>,
+  categoryNameById: Map<number, CategoryName>,
 ) =>
   products
     .filter((product) => product.isActive)

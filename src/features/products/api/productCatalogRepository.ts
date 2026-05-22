@@ -1,10 +1,6 @@
 import { apiRequest } from '../../../lib/api/client'
-import type {
-  AdminProduct,
-  ProductCategory,
-  ProductCategoryName,
-  ProductFormPayload,
-} from '../../../types/product'
+import type { Category, CategoryName } from '../../../types/category'
+import type { AdminProduct, Product } from '../../../types/product'
 
 type CategoryResource = {
   id: number
@@ -26,9 +22,9 @@ type ProductResource = {
   updated_at: string
 }
 
-const mapCategory = (category: CategoryResource): ProductCategory => ({
+const mapCategory = (category: CategoryResource): Category => ({
   id: Number(category.id),
-  name: category.name as ProductCategoryName,
+  name: category.name as CategoryName,
   sortOrder: Number(category.display_order),
   isActive: Boolean(Number(category.is_active)),
 })
@@ -46,7 +42,7 @@ const mapProduct = (product: ProductResource): AdminProduct => ({
   updatedAt: product.updated_at,
 })
 
-const toProductRequestBody = (payload: ProductFormPayload) => ({
+const toProductRequestBody = (payload: Product) => ({
   category_id: payload.categoryId,
   name: payload.name,
   price: payload.price,
@@ -59,7 +55,7 @@ const toProductRequestBody = (payload: ProductFormPayload) => ({
   display_order: payload.sortOrder,
 })
 
-export const listCategories = async (): Promise<ProductCategory[]> => {
+export const listCategories = async (): Promise<Category[]> => {
   const categories = await apiRequest<CategoryResource[]>('/api/categories?include_inactive=1')
   return categories.map(mapCategory)
 }
@@ -69,7 +65,7 @@ export const listProducts = async (): Promise<AdminProduct[]> => {
   return products.map(mapProduct)
 }
 
-export const createProduct = async (payload: ProductFormPayload): Promise<void> => {
+export const createProduct = async (payload: Product): Promise<void> => {
   await apiRequest('/api/products', {
     method: 'POST',
     body: JSON.stringify(toProductRequestBody(payload)),
@@ -90,7 +86,7 @@ export const uploadProductImage = async (imageFile: File): Promise<string> => {
 
 export const updateProduct = async (
   productId: number,
-  payload: ProductFormPayload,
+  payload: Product,
 ): Promise<void> => {
   await apiRequest(`/api/products/${productId}`, {
     method: 'PUT',

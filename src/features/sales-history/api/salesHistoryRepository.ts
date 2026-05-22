@@ -1,5 +1,6 @@
 import { apiRequest } from '../../../lib/api/client'
-import type { SalesHistoryDetail, SalesHistoryDetailItem, SalesHistoryItem } from '../../../types/sales'
+import type { SaleDetail, Sale } from '../../../types/sale'
+import type { SaleItem } from '../../../types/saleItem'
 
 type SaleResource = {
   id: number
@@ -35,7 +36,7 @@ const paymentMethodLabels: Record<string, string> = {
   other: 'その他',
 }
 
-const mapSale = (sale: SaleResource, itemCount: number): SalesHistoryItem => ({
+const mapSale = (sale: SaleResource, itemCount: number): Sale => ({
   id: Number(sale.id),
   receiptNumber: sale.receipt_number ?? `NO.${String(sale.id).padStart(4, '0')}`,
   soldAt: sale.sold_at,
@@ -44,7 +45,7 @@ const mapSale = (sale: SaleResource, itemCount: number): SalesHistoryItem => ({
   paymentMethod: paymentMethodLabels[sale.payment_method] ?? sale.payment_method,
 })
 
-const mapSaleDetailItem = (item: NonNullable<SaleDetailResource['items']>[number]): SalesHistoryDetailItem => ({
+const mapSaleDetailItem = (item: NonNullable<SaleDetailResource['items']>[number]): SaleItem => ({
   id: Number(item.id),
   productName: item.product_name,
   categoryName: item.category_name ?? '',
@@ -56,7 +57,7 @@ const mapSaleDetailItem = (item: NonNullable<SaleDetailResource['items']>[number
   total: Number(item.total),
 })
 
-const mapSaleDetail = (sale: SaleDetailResource): SalesHistoryDetail => {
+const mapSaleDetail = (sale: SaleDetailResource): SaleDetail => {
   const items = sale.items?.map(mapSaleDetailItem) ?? []
 
   return {
@@ -70,7 +71,7 @@ const mapSaleDetail = (sale: SaleDetailResource): SalesHistoryDetail => {
   }
 }
 
-export const listSalesHistory = async (): Promise<SalesHistoryItem[]> => {
+export const listSalesHistory = async (): Promise<Sale[]> => {
   const sales = await apiRequest<SaleResource[]>('/api/sales?limit=50')
   const details = await Promise.all(
     sales.map((sale) => apiRequest<SaleDetailResource>(`/api/sales/${sale.id}`)),
@@ -85,7 +86,7 @@ export const listSalesHistory = async (): Promise<SalesHistoryItem[]> => {
   return sales.map((sale) => mapSale(sale, itemCounts.get(Number(sale.id)) ?? 0))
 }
 
-export const getSalesHistoryDetail = async (saleId: number): Promise<SalesHistoryDetail> => {
+export const getSaleDetail = async (saleId: number): Promise<SaleDetail> => {
   const sale = await apiRequest<SaleDetailResource>(`/api/sales/${saleId}`)
   return mapSaleDetail(sale)
 }

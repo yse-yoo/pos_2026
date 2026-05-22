@@ -1,12 +1,12 @@
+import type { Category } from '../../../types/category'
 import type {
   AdminProduct,
-  ProductCategory,
-  ProductFormErrors,
-  ProductFormPayload,
-  ProductFormState,
+  FormErrors,
+  Product,
+  FormState,
 } from '../../../types/product'
 
-export const createEmptyProductForm = (categories: ProductCategory[] = []): ProductFormState => ({
+export const createEmptyProductForm = (categories: Category[] = []): FormState => ({
   name: '',
   price: '',
   categoryId: categories[0] ? String(categories[0].id) : '',
@@ -16,7 +16,7 @@ export const createEmptyProductForm = (categories: ProductCategory[] = []): Prod
   sortOrder: '0',
 })
 
-export const createProductFormFromItem = (item: AdminProduct): ProductFormState => ({
+export const createProductFormFromItem = (item: AdminProduct): FormState => ({
   name: item.name,
   price: String(item.price),
   categoryId: String(item.categoryId),
@@ -27,13 +27,13 @@ export const createProductFormFromItem = (item: AdminProduct): ProductFormState 
 })
 
 export const validateProductForm = (
-  form: ProductFormState,
-  categories: ProductCategory[],
+  form: FormState,
+  categories: Category[],
 ): {
-  errors: ProductFormErrors
-  payload?: ProductFormPayload
+  errors: FormErrors
+  payload?: Product
 } => {
-  const errors: ProductFormErrors = {}
+  const errors: FormErrors = {}
   const normalizedName = form.name.trim()
   const normalizedPrice = Number(form.price)
   const normalizedCategoryId = Number(form.categoryId)

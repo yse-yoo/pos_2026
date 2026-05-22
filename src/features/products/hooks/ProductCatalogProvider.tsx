@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PropsWithChildren } from 'react'
-import type { AdminProduct, ProductCategoryName, ProductFormPayload, ProductStatusFilter } from '../../../types/product'
+import type { CategoryName } from '../../../types/category'
+import type { AdminProduct, Product, StatusFilter } from '../../../types/product'
 import { mapAdminProductsToPosProducts } from '../../pos/model/mapAdminProductsToPosProducts'
 import {
   createProduct as createProductRequest,
@@ -16,7 +17,7 @@ export function ProductCatalogProvider({ children }: PropsWithChildren) {
   const [products, setProducts] = useState<AdminProduct[]>([])
   const [searchKeyword, setSearchKeyword] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState('all')
-  const [selectedStatus, setSelectedStatus] = useState<ProductStatusFilter>('all')
+  const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('all')
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const hasLoaded = useRef(false)
@@ -51,7 +52,7 @@ export function ProductCatalogProvider({ children }: PropsWithChildren) {
     void reloadCatalog()
   }, [reloadCatalog])
 
-  const categoryNameById = new Map<number, ProductCategoryName>(
+  const categoryNameById = new Map<number, CategoryName>(
     categories.map((category) => [category.id, category.name]),
   )
 
@@ -65,12 +66,12 @@ export function ProductCatalogProvider({ children }: PropsWithChildren) {
 
   const activeProductCount = products.filter((product) => product.isActive).length
 
-  const createProduct = async (payload: ProductFormPayload) => {
+  const createProduct = async (payload: Product) => {
     await createProductRequest(payload)
     await reloadCatalog()
   }
 
-  const updateProduct = async (productId: number, payload: ProductFormPayload) => {
+  const updateProduct = async (productId: number, payload: Product) => {
     await updateProductRequest(productId, payload)
     await reloadCatalog()
   }

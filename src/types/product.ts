@@ -1,15 +1,8 @@
-export type ProductCategoryName = string
+import type { CategoryName } from './category'
 
-export type PosCategoryName = '全て' | ProductCategoryName
+export type PosCategoryName = '全て' | CategoryName
 
-export type ProductStatusFilter = 'all' | 'active' | 'inactive'
-
-export type ProductCategory = {
-  id: number
-  name: ProductCategoryName
-  sortOrder: number
-  isActive: boolean
-}
+export type StatusFilter = 'all' | 'active' | 'inactive'
 
 export type AdminProduct = {
   id: number
@@ -28,7 +21,7 @@ export type PosProduct = {
   id: number
   name: string
   price: number
-  category: ProductCategoryName
+  category: CategoryName
   icon: string
   imagePath: string
 }
@@ -37,7 +30,7 @@ export type CartItem = PosProduct & {
   quantity: number
 }
 
-export type ProductFormState = {
+export type FormState = {
   name: string
   price: string
   categoryId: string
@@ -47,11 +40,11 @@ export type ProductFormState = {
   sortOrder: string
 }
 
-export type ProductFormField = keyof ProductFormState
+export type FormField = keyof FormState
 
-export type ProductFormErrors = Partial<Record<ProductFormField, string>>
+export type FormErrors = Partial<Record<FormField, string>>
 
-export type ProductFormPayload = {
+export type Product = {
   name: string
   price: number
   categoryId: number

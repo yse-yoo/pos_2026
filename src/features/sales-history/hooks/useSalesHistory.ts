@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { listSalesHistory } from '../api/salesHistoryRepository'
-import type { SalesHistoryItem } from '../../../types/sales'
+import type { Sale } from '../../../types/sale'
 
 export const useSalesHistory = () => {
-  const [salesHistory, setSalesHistory] = useState<SalesHistoryItem[]>([])
+  const [salesHistory, setSalesHistory] = useState<Sale[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)

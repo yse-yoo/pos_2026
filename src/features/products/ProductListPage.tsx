@@ -7,7 +7,7 @@ import { LoadingState } from '../../components/feedback/LoadingState'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { PagePanel } from '../../components/layout/PagePanel'
 import type { AppRoute } from '../../types/app-route'
-import type { ProductStatusFilter } from '../../types/product'
+import type { StatusFilter } from '../../types/product'
 import { ProductListRow } from './components/ProductListRow'
 import { ProductMobileCard } from './components/ProductMobileCard'
 import { useProductCatalog } from './hooks/useProductCatalog'
@@ -206,7 +206,7 @@ export function ProductListPage({ onNavigate }: ProductListPageProps) {
                 className="admin-select"
                 value={selectedStatus}
                 onChange={(event) =>
-                  setSelectedStatus(event.target.value as ProductStatusFilter)
+                  setSelectedStatus(event.target.value as StatusFilter)
                 }
               >
                 <option value="all">すべて</option>

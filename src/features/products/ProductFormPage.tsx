@@ -6,7 +6,7 @@ import { PageHeader } from '../../components/layout/PageHeader'
 import { PagePanel } from '../../components/layout/PagePanel'
 import { buildAssetUrl } from '../../lib/api/client'
 import type { ProductScreen } from '../../types/app-route'
-import type { ProductFormField } from '../../types/product'
+import type { FormField } from '../../types/product'
 import { useProductCatalog } from './hooks/useProductCatalog'
 import { uploadProductImage } from './api/productCatalogRepository'
 import {
@@ -80,7 +80,7 @@ export function ProductFormPage({ mode, productId, onBack }: ProductFormPageProp
     )
   }
 
-  const updateField = <Field extends ProductFormField>(field: Field, value: (typeof form)[Field]) => {
+  const updateField = <Field extends FormField>(field: Field, value: (typeof form)[Field]) => {
     setForm((currentForm) => ({
       ...currentForm,
       [field]: value,

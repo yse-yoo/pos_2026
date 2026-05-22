@@ -9,15 +9,15 @@ import { PageHeader } from '../../components/layout/PageHeader'
 import { PagePanel } from '../../components/layout/PagePanel'
 import { formatCurrency } from '../../lib/format/currency'
 import { formatSoldAt } from '../../lib/format/dateTime'
-import type { SalesHistoryDetail } from '../../types/sales'
-import { getSalesHistoryDetail } from './api/salesHistoryRepository'
+import type { SaleDetail } from '../../types/sale'
+import { getSaleDetail } from './api/salesHistoryRepository'
 import { useSalesHistory } from './hooks/useSalesHistory'
 import { getPaymentMethodTone } from './model/paymentMethod'
 import './sales-history.css'
 
 export function SalesHistoryPage() {
   const { salesHistory, isLoading, isRefreshing, errorMessage, refresh } = useSalesHistory()
-  const [selectedSaleDetail, setSelectedSaleDetail] = useState<SalesHistoryDetail | null>(null)
+  const [selectedSaleDetail, setSelectedSaleDetail] = useState<SaleDetail | null>(null)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [detailErrorMessage, setDetailErrorMessage] = useState<string | null>(null)
 
@@ -27,7 +27,7 @@ export function SalesHistoryPage() {
     setSelectedSaleDetail(null)
 
     try {
-      setSelectedSaleDetail(await getSalesHistoryDetail(saleId))
+      setSelectedSaleDetail(await getSaleDetail(saleId))
     } catch (error: unknown) {
       setDetailErrorMessage(
         error instanceof Error ? error.message : '売上詳細の取得に失敗しました。',
@@ -213,7 +213,7 @@ export function SalesHistoryPage() {
 }
 
 type SaleDetailContentProps = {
-  sale: SalesHistoryDetail
+  sale: SaleDetail
 }
 
 function SaleDetailContent({ sale }: SaleDetailContentProps) {
