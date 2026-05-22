@@ -18,7 +18,7 @@ export function ProductPanel({
   onAddItem,
 }: ProductPanelProps) {
   return (
-    <section className="page-panel product-panel">
+    <section className="bg-white rounded-3xl p-6 max-[640px]:p-4 flex flex-col gap-6">
       <CategoryTabs
         categories={categories}
         selectedCategory={selectedCategory}

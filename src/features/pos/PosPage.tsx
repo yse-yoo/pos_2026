@@ -36,7 +36,7 @@ export function PosPage() {
       : posProducts.filter((product) => product.category === selectedCategory)
 
   return (
-    <div className="pos-layout">
+    <div className="grid grid-cols-[minmax(0,1fr)_31.25rem] gap-6 max-[900px]:grid-cols-1">
       <ProductPanel
         categories={posCategories}
         selectedCategory={selectedCategory}
