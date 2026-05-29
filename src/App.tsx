@@ -10,6 +10,7 @@ import { ProductCreatePage, ProductEditPage } from './products/ProductFormRoutes
 import { ProductCatalogProvider } from './products/hooks/ProductCatalogProvider'
 import { ProductListPage } from './products/ProductListPage'
 import { SalesHistoryPage } from './sales-history/SalesHistoryPage'
+import { SalesAnalyticsPage } from './sales-analytics/SalesAnalyticsPage'
 
 function App() {
   return (
@@ -23,7 +24,7 @@ function AuthenticatedApp() {
   const location = useLocation()
   const { staff, logout } = useAuth()
   const activeView = getViewNameFromPath(location.pathname)
-  const isAdminRoute = activeView === 'history' || activeView === 'products'
+  const isAdminRoute = activeView === 'history' || activeView === 'analytics' || activeView === 'products'
 
   return (
     <ProductCatalogProvider>
@@ -42,6 +43,7 @@ function AuthenticatedApp() {
               <Route path="/" element={<PosPage />} />
               <Route path="/pos" element={<Navigate to="/" replace />} />
               <Route path="/sales/history" element={<SalesHistoryPage />} />
+              <Route path="/sales/trend" element={<SalesAnalyticsPage />} />
               <Route path="/product" element={<ProductListPage />} />
               <Route path="/product/create" element={<ProductCreatePage />} />
               <Route path="/product/:productId/edit" element={<ProductEditPage />} />

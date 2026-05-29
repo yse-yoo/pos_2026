@@ -22,6 +22,12 @@ export function MainNavigation({ activeView }: MainNavigationProps) {
         履歴
       </Link>
       <Link
+        to="/sales/trend"
+        className={`main-navigation-button${activeView === 'analytics' ? ' is-active' : ''}`}
+      >
+        売上推移
+      </Link>
+      <Link
         to={productListPath}
         className={`main-navigation-button${activeView === 'products' ? ' is-active' : ''}`}
       >

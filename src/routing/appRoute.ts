@@ -5,6 +5,10 @@ export const productListPath = '/product'
 export const productCreatePath = '/product/create'
 
 export const getViewNameFromPath = (pathName: string): ViewName => {
+  if (pathName.startsWith('/sales/trend')) {
+    return 'analytics'
+  }
+
   if (pathName.startsWith('/sales')) {
     return 'history'
   }

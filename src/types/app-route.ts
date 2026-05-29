@@ -1,1 +1,1 @@
-export type ViewName = 'pos' | 'history' | 'products'
+export type ViewName = 'pos' | 'history' | 'analytics' | 'products'
