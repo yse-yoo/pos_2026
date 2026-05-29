@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 560" width="840" height="560"
+     font-family="'Hiragino Sans', 'Yu Gothic', 'Meiryo', 'Segoe UI', sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#222"/>
+    </marker>
+    <marker id="arrOg" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f57c00"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="420" y="38" text-anchor="middle" font-size="17" font-weight="bold" fill="#1a3a1a">Square 連携アーキテクチャ</text>
+
+  <!-- ======================================
+       ① Frontend  (top-left, green)
+       x=30, y=60, w=340, h=145
+  ======================================= -->
+  <rect x="30" y="60" width="340" height="145" rx="10" fill="#fff" stroke="#4caf50" stroke-width="2"/>
+  <rect x="30" y="60" width="340" height="34" rx="10" fill="#4caf50"/>
+  <rect x="30" y="82"  width="340" height="12" fill="#4caf50"/>
+  <text x="200" y="83" text-anchor="middle" font-size="15" font-weight="bold" fill="#fff">① SmartPOS Frontend（ブラウザ）</text>
+  <text x="50" y="115" font-size="12" fill="#222">・会計金額を確定し、支払方法を選択</text>
+  <text x="50" y="135" font-size="12" fill="#222">・「Square で支払う」ボタンを押す</text>
+  <text x="50" y="155" font-size="12" fill="#222">・支払い待ち画面表示、完了 / 失敗</text>
+  <text x="50" y="180" font-size="14" fill="#bf0000" font-weight="bold">カートリセット・伝票番号更新</text>
+
+  <!-- ======================================
+       Arrow 1: Frontend → Backend  (→)
+       y=132, x: 370 → 470
+  ======================================= -->
+  <line x1="370" y1="132" x2="470" y2="132" stroke="#222" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="372" y="92" width="96" height="22" rx="4" fill="#e8f5e9" stroke="#a5d6a7" stroke-width="1"/>
+  <text x="420" y="108" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#2e7d32">REST (HTTPS)</text>
+
+  <!-- ======================================
+       ② Backend  (top-right, blue)
+       x=470, y=60, w=340, h=145
+  ======================================= -->
+  <rect x="470" y="60" width="340" height="145" rx="10" fill="#fff" stroke="#2196f3" stroke-width="2"/>
+  <rect x="470" y="60" width="340" height="34" rx="10" fill="#2196f3"/>
+  <rect x="470" y="82"  width="340" height="12" fill="#2196f3"/>
+  <text x="640" y="83" text-anchor="middle" font-size="15" font-weight="bold" fill="#fff">② SmartPOS Backend</text>
+  <text x="488" y="117" font-size="12" fill="#222">POST /api/payments/square/checkout</text>
+  <text x="488" y="135" font-size="12" fill="#bf0000" font-weight="bold">Square SDK でチェックアウト作成 → checkout_id</text>
+
+  <text x="488" y="168" font-size="12" fill="#222">POST /api/webhooks/square</text>
+  <text x="488" y="185" font-size="12" fill="#bf0000" font-weight="bold">署名検証 → square_payment_id 保存</text>
+
+  <!-- ======================================
+       Arrow 2: Backend → Square Platform  (↓)
+       x=640, y: 205 → 360
+  ======================================= -->
+  <line x1="640" y1="205" x2="640" y2="360" stroke="#222" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="652" y="262" width="140" height="22" rx="4" fill="#e3f2fd" stroke="#90caf9" stroke-width="1"/>
+  <text x="722" y="277" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#1565c0">Square API (HTTPS)</text>
+
+  <!-- ======================================
+       Arrow Webhook: Square Platform → Backend  (↑, dashed)
+       x=600, y: 360 → 205
+  ======================================= -->
+  <line x1="600" y1="360" x2="600" y2="205" stroke="#f57c00" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrOg)"/>
+  <rect x="480" y="262" width="82" height="22" rx="4" fill="#fff3e0" stroke="#ffcc80" stroke-width="1"/>
+  <text x="521" y="277" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#e65100">Webhook</text>
+
+  <!-- ======================================
+       ③ Square Platform  (bottom-right, orange)
+  ======================================= -->
+  <rect x="470" y="360" width="340" height="110" rx="10" fill="#fff" stroke="#ff9800" stroke-width="2"/>
+  <rect x="470" y="360" width="340" height="34" rx="10" fill="#ff9800"/>
+  <rect x="470" y="382" width="340" height="12" fill="#ff9800"/>
+  <text x="640" y="383" text-anchor="middle" font-size="15" font-weight="bold" fill="#fff">③ Square Platform</text>
+  <text x="490" y="416" font-size="12" fill="#222">・Terminal Checkouts API</text>
+  <text x="490" y="436" font-size="12" fill="#222">・Payments API</text>
+  <text x="665" y="416" font-size="12" fill="#222">・Webhooks</text>
+  <text x="665" y="436" font-size="12" fill="#222">・OAuth 2.0</text>
+
+  <!-- ======================================
+       Arrow 3: Square Platform → Square Terminal  (←)
+  ======================================= -->
+  <line x1="470" y1="432" x2="370" y2="432" stroke="#222" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="372" y="390" width="96" height="20" rx="4" fill="#fce4ec" stroke="#f48fb1" stroke-width="1"/>
+  <text x="420" y="404" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#880e4f">Bluetooth / LAN</text>
+
+  <!-- ======================================
+       ④ Square Terminal  (bottom-left, purple)
+  ======================================= -->
+  <rect x="30" y="360" width="340" height="110" rx="10" fill="#fff" stroke="#9c27b0" stroke-width="2"/>
+  <rect x="30" y="360" width="340" height="34" rx="10" fill="#9c27b0"/>
+  <rect x="30" y="382" width="340" height="12" fill="#9c27b0"/>
+  <text x="200" y="383" text-anchor="middle" font-size="15" font-weight="bold" fill="#fff">④ Square Terminal（店頭端末）</text>
+  <text x="50" y="416" font-size="12" fill="#222">・カード（チップ・タッチ）/ Apple Pay / Google Pay</text>
+  <text x="50" y="436" font-size="12" fill="#222">・交通系 IC（Suica 等）/ QR コード決済</text>
+  <text x="50" y="460" font-size="14" fill="#bf0000" font-weight="bold">お客様が端末を操作して決済完了</text>
+
+</svg>

@@ -19,7 +19,7 @@ type ReceiptPanelProps = {
   onChangeQuantity: (productId: number, delta: number) => void
   onChangeOrderType: (orderType: OrderType) => void
   onClearOrder: () => void
-  onCompletePayment: (method: PaymentMethod, displayLabel?: string) => Promise<void>
+  onCompletePayment: (method: PaymentMethod) => Promise<void>
 }
 
 export function ReceiptPanel({
@@ -38,7 +38,6 @@ export function ReceiptPanel({
   onCompletePayment,
 }: ReceiptPanelProps) {
   const hasItems = items.length > 0
-  const orderFingerprint = items.map((item) => `${item.id}:${item.quantity}`).join('|')
 
   return (
     <aside className="page-panel receipt-panel">
@@ -62,7 +61,6 @@ export function ReceiptPanel({
       />
       <ReceiptActions
         hasItems={hasItems}
-        orderFingerprint={orderFingerprint}
         receiptNumber={receiptNumber}
         isCompletingPayment={isCompletingPayment}
         onClearOrder={onClearOrder}

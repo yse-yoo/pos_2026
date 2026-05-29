@@ -1,14 +1,14 @@
 import { apiRequest } from '../../lib/api/client'
 import type { CartItem } from '../../types/product'
 
-type PaymentMethod = 'cash' | 'card' | 'qr' | 'other'
+type PaymentMethod = 'cash' | 'card' | 'qr' | 'other' | 'square'
 
 export const createSale = async (
   items: CartItem[],
   paymentMethod: PaymentMethod,
   taxRatePercent: number,
 ): Promise<void> => {
-  await apiRequest('/api/sales', {
+  await apiRequest('/api/payments/square/checkout', {
     method: 'POST',
     body: JSON.stringify({
       payment_method: paymentMethod,

@@ -7,5 +7,9 @@ export const getPaymentMethodTone = (paymentMethod: string) => {
     return 'card' as const
   }
 
+  if (paymentMethod.toLowerCase().includes('square')) {
+    return 'card' as const
+  }
+
   return 'neutral' as const
 }
