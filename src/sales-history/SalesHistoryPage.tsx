@@ -186,7 +186,7 @@ export function SalesHistoryPage() {
                   {selectedSaleDetail?.receiptNumber ?? '読み込み中'}
                 </h3>
               </div>
-              <Button className="px-4 py-2" variant="ghost" onClick={closeSaleDetail} disabled={isLoadingDetail}>
+              <Button className="px-4 py-4" variant="ghost" onClick={closeSaleDetail} disabled={isLoadingDetail}>
                 閉じる
               </Button>
             </div>

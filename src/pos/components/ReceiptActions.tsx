@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Button } from '../../components/actions/Button'
 import { formatReceiptNumber } from '../../lib/format/receipt'
@@ -46,12 +46,19 @@ export function ReceiptActions({
   onClearOrder,
   onCompletePayment,
 }: ReceiptActionsProps) {
+  const [isOrderConfirmed, setIsOrderConfirmed] = useState(false)
   const [paymentDialog, setPaymentDialog] = useState<PaymentDialog>(null)
   const [selectedElectronicPayment, setSelectedElectronicPayment] =
     useState<ElectronicPaymentOption | null>(null)
   const [completedPaymentLabel, setCompletedPaymentLabel] = useState('')
   const isPaymentLocked = isCompletingPayment || paymentDialog === 'processing'
   const isDisabled = !hasItems || isPaymentLocked
+
+  useEffect(() => {
+    if (!hasItems) {
+      setIsOrderConfirmed(false)
+    }
+  }, [hasItems])
 
   const openDialog = (dialog: Exclude<PaymentDialog, 'processing' | 'completed' | null>) => {
     setSelectedElectronicPayment(null)
@@ -88,35 +95,56 @@ export function ReceiptActions({
 
   return (
     <>
-      <div className="receipt-actions">
-        <Button className="px-4 py-2" variant="ghost" onClick={onClearOrder} disabled={!hasItems}>
-          クリア
-        </Button>
-        <Button
-          variant="secondary"
-          className="px-4 py-2"
-          onClick={() => openDialog('cash')}
-          disabled={isDisabled}
-        >
-          現金
-        </Button>
-        <Button
-          variant="secondary"
-          className="px-4 py-2"
-          onClick={() => openDialog('qr')}
-          disabled={isDisabled}
-        >
-          QR
-        </Button>
-        <Button
-          variant="secondary"
-          className="px-4 py-2"
-          onClick={() => openDialog('electronic')}
-          disabled={isDisabled}
-        >
-          電子決済
-        </Button>
-      </div>
+      {isOrderConfirmed ? (
+        <div className="receipt-actions">
+          <Button
+            className="px-4 py-4"
+            variant="ghost"
+            onClick={() => setIsOrderConfirmed(false)}
+            disabled={isPaymentLocked}
+          >
+            戻る
+          </Button>
+          <Button
+            variant="secondary"
+            className="px-4 py-4"
+            onClick={() => openDialog('cash')}
+            disabled={isDisabled}
+          >
+            現金
+          </Button>
+          <Button
+            variant="secondary"
+            className="px-4 py-4"
+            onClick={() => openDialog('qr')}
+            disabled={isDisabled}
+          >
+            QR
+          </Button>
+          <Button
+            variant="secondary"
+            className="px-4 py-4"
+            onClick={() => openDialog('electronic')}
+            disabled={isDisabled}
+          >
+            電子決済
+          </Button>
+        </div>
+      ) : (
+        <div className="receipt-actions">
+          <Button className="px-4 py-4" variant="ghost" onClick={onClearOrder} disabled={!hasItems}>
+            クリア
+          </Button>
+          <Button
+            variant="primary"
+            className="px-4 py-4 receipt-confirm-button"
+            onClick={() => setIsOrderConfirmed(true)}
+            disabled={!hasItems}
+          >
+            注文確定
+          </Button>
+        </div>
+      )}
 
       {paymentDialog ? (
         <div className="payment-dialog-backdrop" role="presentation">
@@ -134,7 +162,7 @@ export function ReceiptActions({
                 onCancel={closeDialog}
                 actions={
                   <Button
-                    className="px-4 py-2"
+                    className="px-4 py-4"
                     variant="primary"
                     onClick={() => void completePayment('cash', '現金')}
                     disabled={isCompletingPayment}
@@ -152,7 +180,7 @@ export function ReceiptActions({
                 isCompletingPayment={isCompletingPayment}
                 onCancel={closeDialog}
                 body={
-                  <div className="flex flex-col items-center gap-3 py-2">
+                  <div className="flex flex-col items-center gap-3 py-4">
                     <div className="p-3 bg-white rounded-xl border border-[#e2e8f0]">
                       <QRCodeSVG value={qrValue} size={180} />
                     </div>
@@ -161,7 +189,7 @@ export function ReceiptActions({
                 }
                 actions={
                   <Button
-                    className="px-4 py-2"
+                    className="px-4 py-4"
                     variant="primary"
                     onClick={() => void completePayment('qr', 'QR')}
                     disabled={isCompletingPayment}
@@ -245,7 +273,7 @@ function PaymentCompletedContent({ paymentLabel, onClose }: PaymentCompletedCont
       </div>
 
       <div className="payment-dialog-actions">
-        <Button className="px-4 py-2" variant="primary" onClick={onClose}>
+        <Button className="px-4 py-4" variant="primary" onClick={onClose}>
           閉じる
         </Button>
       </div>
@@ -280,7 +308,7 @@ function PaymentDialogContent({
       {body ?? null}
 
       <div className="payment-dialog-actions">
-        <Button className="px-4 py-2" variant="ghost" onClick={onCancel} disabled={isCompletingPayment}>
+        <Button className="px-4 py-4" variant="ghost" onClick={onCancel} disabled={isCompletingPayment}>
           戻る
         </Button>
         {actions}
@@ -308,7 +336,7 @@ function ElectronicPaymentActions({
         {electronicPaymentOptions.map((payment) => (
           <Button
             key={payment.label}
-            className="px-4 py-2"
+            className="px-4 py-4"
             variant={selectedPayment?.label === payment.label ? 'primary' : 'secondary'}
             onClick={() => onSelectPayment(payment)}
             disabled={isCompletingPayment}
@@ -320,7 +348,7 @@ function ElectronicPaymentActions({
 
       {selectedPayment ? (
         <Button
-          className="px-6 py-2"
+          className="px-6 py-4"
           variant="primary"
           onClick={() => void onComplete(selectedPayment.method, selectedPayment.label)}
           disabled={isCompletingPayment}

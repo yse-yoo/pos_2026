@@ -2,7 +2,6 @@
   border: 0;
   border-radius: 0.85rem;
   font: inherit;
-  font-size: 0.82rem;
   font-weight: 800;
   cursor: pointer;
   transition:
@@ -42,12 +41,12 @@
 }
 
 .button-ghost {
-  background: transparent;
-  color: #94a3b8;
+  background: #ecf2ff;
+  color: #465365;
 }
 
 .button-ghost:hover:not(:disabled) {
-  background: #f8fafc;
+  background: #f1f5f9;
 }
 
 .button-danger {

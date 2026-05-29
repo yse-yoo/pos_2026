@@ -1,3 +1,6 @@
+# checklist
+docs/checklist/*
+
 # Logs
 logs
 *.log

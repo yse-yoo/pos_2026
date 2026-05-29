@@ -39,9 +39,9 @@
                         <span class="bg-white/20 p-1 rounded-lg">🌿</span> SmartPOS
                     </span>
                     <div class="hidden md:flex gap-1">
-                        <button onclick="switchView('pos')" class="nav-item px-4 py-2 rounded-lg text-sm font-bold text-white bg-white/10">レジ</button>
-                        <button onclick="switchView('history')" class="nav-item px-4 py-2 rounded-lg text-sm font-bold text-brand-light/70 hover:text-white hover:bg-white/5 transition-all">履歴</button>
-                        <button onclick="switchView('products')" class="nav-item px-4 py-2 rounded-lg text-sm font-bold text-brand-light/70 hover:text-white hover:bg-white/5 transition-all">商品管理</button>
+                        <button onclick="switchView('pos')" class="nav-item px-4 py-4 rounded-lg text-sm font-bold text-white bg-white/10">レジ</button>
+                        <button onclick="switchView('history')" class="nav-item px-4 py-4 rounded-lg text-sm font-bold text-brand-light/70 hover:text-white hover:bg-white/5 transition-all">履歴</button>
+                        <button onclick="switchView('products')" class="nav-item px-4 py-4 rounded-lg text-sm font-bold text-brand-light/70 hover:text-white hover:bg-white/5 transition-all">商品管理</button>
                     </div>
                 </div>
                 <div class="flex items-center gap-6">
@@ -58,11 +58,11 @@
             
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-brand/10 flex flex-col gap-6">
                 <div id="category-tabs" class="flex flex-wrap gap-2">
-                    <button onclick="filterCat(this,'全て')" class="tab-btn active px-6 py-2 rounded-lg bg-brand text-white text-sm font-bold shadow-sm shadow-brand/20">全て</button>
-                    <button onclick="filterCat(this,'フード')" class="tab-btn px-6 py-2 rounded-lg bg-slate-50 text-slate-500 text-sm font-bold hover:bg-brand/5 border border-transparent hover:border-brand/20 transition-all">フード</button>
-                    <button onclick="filterCat(this,'ドリンク')" class="tab-btn px-6 py-2 rounded-lg bg-slate-50 text-slate-500 text-sm font-bold hover:bg-brand/5 border border-transparent hover:border-brand/20 transition-all">ドリンク</button>
-                    <button onclick="filterCat(this,'トッピング')" class="tab-btn px-6 py-2 rounded-lg bg-slate-50 text-slate-500 text-sm font-bold hover:bg-brand/5 border border-transparent hover:border-brand/20 transition-all">トッピング</button>
-                    <button onclick="filterCat(this,'有料袋')" class="tab-btn px-6 py-2 rounded-lg bg-slate-50 text-slate-500 text-sm font-bold hover:bg-brand/5 border border-transparent hover:border-brand/20 transition-all">有料袋</button>
+                    <button onclick="filterCat(this,'全て')" class="tab-btn active px-6 py-4 rounded-lg bg-brand text-white text-sm font-bold shadow-sm shadow-brand/20">全て</button>
+                    <button onclick="filterCat(this,'フード')" class="tab-btn px-6 py-4 rounded-lg bg-slate-50 text-slate-500 text-sm font-bold hover:bg-brand/5 border border-transparent hover:border-brand/20 transition-all">フード</button>
+                    <button onclick="filterCat(this,'ドリンク')" class="tab-btn px-6 py-4 rounded-lg bg-slate-50 text-slate-500 text-sm font-bold hover:bg-brand/5 border border-transparent hover:border-brand/20 transition-all">ドリンク</button>
+                    <button onclick="filterCat(this,'トッピング')" class="tab-btn px-6 py-4 rounded-lg bg-slate-50 text-slate-500 text-sm font-bold hover:bg-brand/5 border border-transparent hover:border-brand/20 transition-all">トッピング</button>
+                    <button onclick="filterCat(this,'有料袋')" class="tab-btn px-6 py-4 rounded-lg bg-slate-50 text-slate-500 text-sm font-bold hover:bg-brand/5 border border-transparent hover:border-brand/20 transition-all">有料袋</button>
                 </div>
                 
                 <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto max-h-[720px] pr-2">
@@ -76,7 +76,7 @@
                 </div>
 
                 <div id="receipt-items" class="flex-1 p-5 overflow-y-auto space-y-2">
-                    <div class="text-center py-20 text-slate-300">
+                    <div class="text-center py-40 text-slate-300">
                         <p class="text-sm font-bold italic">No items selected</p>
                     </div>
                 </div>

@@ -12,7 +12,7 @@ export function ReceiptItems({ items, onChangeQuantity }: ReceiptItemsProps) {
     <div className="receipt-items">
       {items.length === 0 ? (
         <div className="empty-cart">
-          <p>No items selected</p>
+          <p>商品を選択してください</p>
         </div>
       ) : (
         items.map((item) => (

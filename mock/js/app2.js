@@ -21,7 +21,7 @@ function switchView(viewName) {
 // 管理者ログイン用
 function handleLogin() {
     const pass = prompt('管理者パスワードを入力してください');
-    if(pass === 'admin') {
+    if (pass === 'admin') {
         alert('ログイン成功');
     } else {
         alert('パスワードが違います');
@@ -34,7 +34,7 @@ const fmt = (n) => '¥' + n.toLocaleString('ja-JP');
 function renderProducts(cat) {
     const grid = document.getElementById('product-grid');
     const list = cat === '全て' ? allProducts : allProducts.filter(p => p.cat === cat);
-    
+
     grid.innerHTML = list.map(p => `
         <button onclick="addItem(${p.id})" class="bg-white border border-gray-200 rounded-lg p-3 flex flex-col items-center gap-1 hover:border-blue-300 hover:bg-blue-50 transition-all shadow-sm">
             <span class="text-2xl">${p.icon}</span>
@@ -55,7 +55,7 @@ function filterCat(el, cat) {
 function addItem(id) {
     const p = allProducts.find(x => x.id === id);
     const existing = cart.find(x => x.id === id);
-    if (existing) { existing.qty += 1; } 
+    if (existing) { existing.qty += 1; }
     else { cart.push({ ...p, qty: 1 }); }
     renderCart();
 }
@@ -81,7 +81,7 @@ function renderCart() {
         return;
     }
     el.innerHTML = cart.map(item => `
-        <div class="flex items-center gap-2 py-2 border-b border-gray-50 last:border-none">
+        <div class="flex items-center gap-2 py-4 border-b border-gray-50 last:border-none">
             <span class="flex-1 text-md font-medium">${item.icon} ${item.name}</span>
             <div class="flex items-center gap-2">
                 <button onclick="changeQty(${item.id},-1)" class="w-5 h-5 rounded-full border flex items-center justify-center text-xs hover:bg-gray-100">−</button>

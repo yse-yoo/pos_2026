@@ -67,7 +67,7 @@ export function AdminLoginPage() {
               <Button
                 type="submit"
                 variant="primary"
-                className="px-4 py-2"
+                className="px-4 py-4"
                 disabled={isSubmitting || loginId.trim() === '' || password === ''}
               >
                 {isSubmitting ? 'ログイン中...' : 'ログイン'}
