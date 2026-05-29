@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Button } from '../../components/actions/Button'
 import { formatReceiptNumber } from '../../lib/format/receipt'
@@ -24,7 +24,8 @@ const electronicPaymentOptions: ElectronicPaymentOption[] = [
   },
 ]
 
-const PAYMENT_PROCESSING_DELAY_MS = 2200
+// 決済処理の遅延をシミュレートするための定数（環境変数から取得、デフォルトは5秒）
+const PAYMENT_PROCESSING_DELAY_MS = parseInt(import.meta.env.PAYMENT_PROCESSING_DELAY) || 5000 // 5秒の遅延をシミュレート
 
 const wait = (duration: number) =>
   new Promise((resolve) => {
@@ -33,6 +34,7 @@ const wait = (duration: number) =>
 
 type ReceiptActionsProps = {
   hasItems: boolean
+  orderFingerprint: string
   receiptNumber: number
   isCompletingPayment: boolean
   onClearOrder: () => void
@@ -41,24 +43,20 @@ type ReceiptActionsProps = {
 
 export function ReceiptActions({
   hasItems,
+  orderFingerprint,
   receiptNumber,
   isCompletingPayment,
   onClearOrder,
   onCompletePayment,
 }: ReceiptActionsProps) {
-  const [isOrderConfirmed, setIsOrderConfirmed] = useState(false)
+  const [confirmedOrderFingerprint, setConfirmedOrderFingerprint] = useState<string | null>(null)
   const [paymentDialog, setPaymentDialog] = useState<PaymentDialog>(null)
   const [selectedElectronicPayment, setSelectedElectronicPayment] =
     useState<ElectronicPaymentOption | null>(null)
   const [completedPaymentLabel, setCompletedPaymentLabel] = useState('')
   const isPaymentLocked = isCompletingPayment || paymentDialog === 'processing'
   const isDisabled = !hasItems || isPaymentLocked
-
-  useEffect(() => {
-    if (!hasItems) {
-      setIsOrderConfirmed(false)
-    }
-  }, [hasItems])
+  const isOrderConfirmed = hasItems && confirmedOrderFingerprint === orderFingerprint
 
   const openDialog = (dialog: Exclude<PaymentDialog, 'processing' | 'completed' | null>) => {
     setSelectedElectronicPayment(null)
@@ -100,7 +98,7 @@ export function ReceiptActions({
           <Button
             className="px-4 py-4"
             variant="ghost"
-            onClick={() => setIsOrderConfirmed(false)}
+            onClick={() => setConfirmedOrderFingerprint(null)}
             disabled={isPaymentLocked}
           >
             戻る
@@ -138,7 +136,7 @@ export function ReceiptActions({
           <Button
             variant="primary"
             className="px-4 py-4 receipt-confirm-button"
-            onClick={() => setIsOrderConfirmed(true)}
+            onClick={() => setConfirmedOrderFingerprint(orderFingerprint)}
             disabled={!hasItems}
           >
             注文確定

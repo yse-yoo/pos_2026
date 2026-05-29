@@ -1,6 +1,12 @@
 # checklist
 docs/checklist/*
 
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+
 # Logs
 logs
 *.log

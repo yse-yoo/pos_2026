@@ -38,6 +38,7 @@ export function ReceiptPanel({
   onCompletePayment,
 }: ReceiptPanelProps) {
   const hasItems = items.length > 0
+  const orderFingerprint = items.map((item) => `${item.id}:${item.quantity}`).join('|')
 
   return (
     <aside className="page-panel receipt-panel">
@@ -61,6 +62,7 @@ export function ReceiptPanel({
       />
       <ReceiptActions
         hasItems={hasItems}
+        orderFingerprint={orderFingerprint}
         receiptNumber={receiptNumber}
         isCompletingPayment={isCompletingPayment}
         onClearOrder={onClearOrder}
