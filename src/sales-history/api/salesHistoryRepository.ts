@@ -13,6 +13,7 @@ type SaleResource = {
   cash_received?: number | null
   change_amount?: number | null
   status?: string
+  item_count?: number
 }
 
 type SaleDetailResource = SaleResource & {
@@ -71,19 +72,25 @@ const mapSaleDetail = (sale: SaleDetailResource): SaleDetail => {
   }
 }
 
-export const listSalesHistory = async (): Promise<Sale[]> => {
-  const sales = await apiRequest<SaleResource[]>('/api/sales?limit=50')
-  const details = await Promise.all(
-    sales.map((sale) => apiRequest<SaleDetailResource>(`/api/sales/${sale.id}`)),
-  )
-  const itemCounts = new Map(
-    details.map((sale) => [
-      Number(sale.id),
-      sale.items?.reduce((sum, item) => sum + Number(item.quantity), 0) ?? 0,
-    ]),
-  )
+type SalesListResource = {
+  items: SaleResource[]
+  total: number
+}
 
-  return sales.map((sale) => mapSale(sale, itemCounts.get(Number(sale.id)) ?? 0))
+export const PAGE_SIZE = 20
+
+export const listSalesHistory = async (
+  page: number,
+  limit: number = PAGE_SIZE,
+): Promise<{ sales: Sale[]; total: number }> => {
+  const offset = (page - 1) * limit
+  const { items, total } = await apiRequest<SalesListResource>(
+    `/api/sales?limit=${limit}&offset=${offset}`,
+  )
+  return {
+    sales: items.map((sale) => mapSale(sale, Number(sale.item_count ?? 0))),
+    total,
+  }
 }
 
 export const getSaleDetail = async (saleId: number): Promise<SaleDetail> => {

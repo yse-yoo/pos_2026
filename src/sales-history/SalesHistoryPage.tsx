@@ -16,7 +16,18 @@ import { getPaymentMethodTone } from './model/paymentMethod'
 import './sales-history.css'
 
 export function SalesHistoryPage() {
-  const { salesHistory, isLoading, isRefreshing, errorMessage, refresh } = useSalesHistory()
+  const {
+    salesHistory,
+    currentPage,
+    totalPages,
+    totalCount,
+    pageSize,
+    isLoading,
+    isRefreshing,
+    errorMessage,
+    goToPage,
+    refresh,
+  } = useSalesHistory()
   const [selectedSaleDetail, setSelectedSaleDetail] = useState<SaleDetail | null>(null)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [detailErrorMessage, setDetailErrorMessage] = useState<string | null>(null)
@@ -53,10 +64,10 @@ export function SalesHistoryPage() {
           description="過去の会計一覧を確認できます。新しい会計から順に表示しています。"
           actions={
             <div className="history-actions">
-              <SummaryCard label="会計件数" value={salesHistory.length} className="history-summary-card" />
+              <SummaryCard label="会計件数" value={totalCount} className="history-summary-card" />
               <Button
                 variant="secondary"
-                className="history-refresh-button"
+                className="p-4 history-refresh-button"
                 onClick={() => void refresh()}
                 disabled={isLoading || isRefreshing}
               >
@@ -167,6 +178,35 @@ export function SalesHistoryPage() {
                 </article>
               ))}
             </div>
+
+            {totalPages > 1 ? (
+              <div className="history-pagination">
+                <span className="history-pagination-info">
+                  {(currentPage - 1) * pageSize + 1}〜{Math.min(currentPage * pageSize, totalCount)} / {totalCount}件
+                </span>
+                <div className="history-pagination-controls p-4">
+                  <Button
+                    variant="secondary"
+                    className="history-pagination-button"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage <= 1 || isRefreshing}
+                  >
+                    前へ
+                  </Button>
+                  <span className="history-pagination-pages">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <Button
+                    variant="secondary"
+                    className="history-pagination-button"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage >= totalPages || isRefreshing}
+                  >
+                    次へ
+                  </Button>
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
       </PagePanel>

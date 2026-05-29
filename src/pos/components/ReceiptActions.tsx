@@ -22,19 +22,37 @@ export function ReceiptActions({
   onCompletePayment,
 }: ReceiptActionsProps) {
   const [paymentDialog, setPaymentDialog] = useState<PaymentDialog>(null)
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null)
   const [completedPaymentLabel, setCompletedPaymentLabel] = useState('')
   const isPaymentLocked = isCompletingPayment || paymentDialog === 'processing'
   const isDisabled = !hasItems || isPaymentLocked
 
+  const paymentMethodLabels: Record<PaymentMethod, string> = {
+    cash: '現金',
+    qr: 'QR',
+    other: '交通系',
+    card: 'クレジット',
+    square: 'Square カード',
+  }
+
   const openDialog = (dialog: Exclude<PaymentDialog, 'processing' | 'completed' | null>) => {
+    setSelectedMethod(null)
     setCompletedPaymentLabel('')
     setPaymentDialog(dialog)
   }
 
   const closeDialog = () => {
     if (!isPaymentLocked) {
+      setSelectedMethod(null)
       setCompletedPaymentLabel('')
       setPaymentDialog(null)
+    }
+  }
+
+  const backToSquare = () => {
+    if (!isPaymentLocked) {
+      setSelectedMethod(null)
+      setPaymentDialog('square')
     }
   }
 
@@ -51,14 +69,17 @@ export function ReceiptActions({
     }
   }
 
-  const qrValue = formatReceiptNumber(receiptNumber)
-
-  const backToSquare = () => {
-    if (!isPaymentLocked) {
-      setSelectedElectronicPayment(null)
-      setPaymentDialog('square')
+  const confirmPayment = (method: PaymentMethod) => {
+    if (method === 'cash') {
+      setPaymentDialog('cash')
+    } else if (method === 'qr') {
+      setPaymentDialog('qr')
+    } else {
+      void completePayment(method, paymentMethodLabels[method])
     }
   }
+
+  const qrValue = formatReceiptNumber(receiptNumber)
 
   return (
     <>
@@ -91,46 +112,25 @@ export function ReceiptActions({
                   <p>支払い方法を選択してください。</p>
                 </div>
                 <div className="payment-method-options">
-                  <Button
-                    className="px-4 py-4"
-                    variant="secondary"
-                    onClick={() => setPaymentDialog('cash')}
-                    disabled={isPaymentLocked}
-                  >
-                    現金
-                  </Button>
-                  <Button
-                    className="px-4 py-4"
-                    variant="secondary"
-                    onClick={() => setPaymentDialog('qr')}
-                    disabled={isPaymentLocked}
-                  >
-                    QR
-                  </Button>
-                  <Button
-                    className="px-4 py-4"
-                    variant="secondary"
-                    onClick={() => void completePayment('other', '交通系')}
-                    disabled={isPaymentLocked}
-                  >
-                    交通系
-                  </Button>
-                  <Button
-                    className="px-4 py-4"
-                    variant="secondary"
-                    onClick={() => void completePayment('card', 'クレジット')}
-                    disabled={isPaymentLocked}
-                  >
-                    クレジット
-                  </Button>
-                  <Button
-                    className="px-4 py-4"
-                    variant="primary"
-                    onClick={() => void completePayment('square', 'Square')}
-                    disabled={isPaymentLocked}
-                  >
-                    カード
-                  </Button>
+                  {(
+                    [
+                      { method: 'cash', label: '現金' },
+                      { method: 'qr', label: 'QR' },
+                      { method: 'other', label: '交通系' },
+                      { method: 'card', label: 'クレジット' },
+                      { method: 'square', label: 'カード' },
+                    ] as const
+                  ).map(({ method, label }) => (
+                    <Button
+                      key={method}
+                      className="px-4 py-4"
+                      variant={selectedMethod === method ? 'primary' : 'secondary'}
+                      onClick={() => setSelectedMethod(method)}
+                      disabled={isPaymentLocked}
+                    >
+                      {label}
+                    </Button>
+                  ))}
                 </div>
                 <div className="payment-dialog-actions">
                   <Button
@@ -141,6 +141,16 @@ export function ReceiptActions({
                   >
                     キャンセル
                   </Button>
+                  {selectedMethod ? (
+                    <Button
+                      className="px-4 py-4"
+                      variant="primary"
+                      onClick={() => confirmPayment(selectedMethod)}
+                      disabled={isPaymentLocked}
+                    >
+                      確定
+                    </Button>
+                  ) : null}
                 </div>
               </>
             ) : null}
@@ -213,8 +223,8 @@ function PaymentProcessingContent({ paymentLabel }: PaymentProcessingContentProp
   return (
     <>
       <div className="payment-dialog-header">
-        <h3 id="payment-dialog-title">決済処理中</h3>
-        <p>{paymentLabel ? `${paymentLabel}で決済しています。` : '決済しています。'}</p>
+        <h3 id="payment-dialog-title">決済処理</h3>
+        <p>{paymentLabel ? `${paymentLabel}で決済します。端末で操作してください。` : '決済します。端末で操作してください。'}</p>
       </div>
 
       <div className="payment-processing-state" aria-live="polite">
