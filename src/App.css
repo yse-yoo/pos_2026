@@ -1,11 +1,17 @@
 .app-shell {
-  min-height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
   color: var(--brand-text);
 }
 
 .app-main {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
   max-width: 1600px;
   margin: 0 auto;
+  width: 100%;
   padding: 1.25rem;
 }
 

@@ -9,9 +9,10 @@
 }
 
 .receipt-panel {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
-  min-height: 780px;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -44,13 +45,14 @@
 }
 
 .receipt-items {
+  flex: 0 1 auto;
+  min-height: 0;
   padding: 1.25rem 1.5rem;
   overflow-y: auto;
 }
 
 .empty-cart {
-  height: 100%;
-  min-height: 15rem;
+  min-height: 0;
   display: grid;
   place-items: center;
   color: #cbd5e1;
@@ -141,6 +143,7 @@
 }
 
 .receipt-summary {
+  flex: 0 0 auto;
   padding: 1.4rem 1.5rem 1.2rem;
   background: #f8faf9;
 }
@@ -220,8 +223,10 @@
 }
 
 .receipt-actions {
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: center;
   gap: 0.5rem;
   padding: 1rem;
   border-top: 1px solid #f1f5f9;
@@ -319,12 +324,6 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.65rem;
-}
-
-@media (max-width: 1200px) {
-  .receipt-panel {
-    min-height: auto;
-  }
 }
 
 @media (max-width: 640px) {
