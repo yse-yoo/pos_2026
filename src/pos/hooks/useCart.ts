@@ -12,7 +12,7 @@ const ORDER_TYPE_TAX_RATES = {
   takeout: 0.08,
 }
 
-export type PaymentMethod = 'cash' | 'card' | 'qr' | 'other' | 'square'
+export type PaymentMethod = 'cash' | 'card' | 'qr' | 'emoney' | 'transportation'
 export type OrderType = keyof typeof ORDER_TYPE_TAX_RATES
 
 export const useCart = () => {

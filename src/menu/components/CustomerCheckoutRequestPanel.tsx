@@ -15,7 +15,7 @@ const paymentGuidance = {
     description: '表示されたQRコードを決済アプリで読み取ってください。',
     buttonLabel: 'QR決済を完了する（仮想）',
   },
-  other: {
+  transportation: {
     title: '交通系ICでお支払いください',
     description: '端末に交通系ICカードをタッチしてください。',
     buttonLabel: '交通系IC決済を完了する（仮想）',
@@ -25,7 +25,7 @@ const paymentGuidance = {
     description: '端末にカードをタッチ、または差し込んでください。',
     buttonLabel: 'カード決済を完了する（仮想）',
   },
-  square: {
+  emoney: {
     title: '端末でタッチ決済してください',
     description: 'Square端末にカードまたはスマートフォンをタッチしてください。',
     buttonLabel: 'POS端末決済を完了する（仮想）',

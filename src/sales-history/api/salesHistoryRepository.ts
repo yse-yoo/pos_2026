@@ -34,7 +34,8 @@ const paymentMethodLabels: Record<string, string> = {
   cash: '現金',
   card: 'カード',
   qr: 'QR',
-  other: 'その他',
+  emoney: 'その他',
+  transportation: '交通系',
 }
 
 const mapSale = (sale: SaleResource, itemCount: number): Sale => ({

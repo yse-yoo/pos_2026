@@ -39,9 +39,9 @@ export function ReceiptActions({
   const paymentMethodLabels: Record<PaymentMethod, string> = {
     cash: '現金',
     qr: 'QR',
-    other: '交通系',
+    transportation: '交通系',
     card: 'クレジット',
-    square: 'カード',
+    emoney: '電子マネー',
   }
 
   useEffect(() => {
@@ -133,9 +133,9 @@ export function ReceiptActions({
                     [
                       { method: 'cash', label: '現金' },
                       { method: 'qr', label: 'QR' },
-                      { method: 'other', label: '交通系' },
+                      { method: 'transportation', label: '交通系' },
+                      { method: 'emoney', label: '電子マネー' },
                       { method: 'card', label: 'クレジット' },
-                      { method: 'square', label: 'カード' },
                     ] as const
                   ).map(({ method, label }) => (
                     <Button

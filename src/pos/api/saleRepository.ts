@@ -1,7 +1,7 @@
 import { apiRequest } from '../../lib/api/client'
 import type { CartItem } from '../../types/product'
 
-type PaymentMethod = 'cash' | 'card' | 'qr' | 'other' | 'square'
+type PaymentMethod = 'cash' | 'card' | 'qr' | 'emoney' | 'transportation'
 
 export const createSale = async (
   items: CartItem[],

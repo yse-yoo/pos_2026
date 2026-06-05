@@ -14,9 +14,6 @@ export function CurrentOrderDraftPanel({ orderDraft }: CurrentOrderDraftPanelPro
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="my-2 text-xl font-bold text-emerald-700">現在のご注文</h2>
-              <p className="m-0 text-sm font-bold text-[#64748b]">
-                レジ担当者が入力した注文内容を表示しています。
-              </p>
             </div>
           </div>
           <OrderDraftItems items={orderDraft.items} />
