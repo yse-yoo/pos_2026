@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react'
+import {
+  cancelCheckoutRequest,
+  completeCheckoutRequest,
+} from '../../checkout/api/checkoutRequestRepository'
 import { useCheckout } from '../../checkout/hooks/useCheckout'
 import { useOrderDraft } from '../../order-draft/hooks/useOrderDraft'
 import type { CartItem, PosProduct } from '../../types/product'
@@ -20,6 +24,7 @@ export const useCart = () => {
   const [paymentErrorMessage, setPaymentErrorMessage] = useState<string | null>(null)
   const [paymentCompletedMessage, setPaymentCompletedMessage] = useState<string | null>(null)
   const [requestedCheckoutId, setRequestedCheckoutId] = useState<string | null>(null)
+  const [cashCheckoutId, setCashCheckoutId] = useState<string | null>(null)
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const taxRate = ORDER_TYPE_TAX_RATES[orderType]
@@ -138,6 +143,58 @@ export const useCart = () => {
     setRequestedCheckoutId(checkoutId)
   }
 
+  const startCashPayment = async () => {
+    if (cartItems.length === 0) {
+      return
+    }
+
+    setPaymentErrorMessage(null)
+
+    const checkoutId = await requestCheckout({
+      items: cartItems,
+      paymentMethod: 'cash',
+      orderType,
+      taxRatePercent,
+      subtotal,
+      tax,
+      total,
+    })
+    setRequestedCheckoutId(checkoutId)
+    setCashCheckoutId(checkoutId)
+  }
+
+  const finalizeCashPayment = async () => {
+    if (!cashCheckoutId) {
+      return
+    }
+
+    const completed = await completeCheckoutRequest(cashCheckoutId)
+    setCashCheckoutId(null)
+    setRequestedCheckoutId(null)
+    setCartItems([])
+    setReceiptNumber((n) => n + 1)
+    setPaymentCompletedMessage(
+      completed.sale?.receiptNumber
+        ? `決済が完了しました。レシート番号: ${completed.sale.receiptNumber}`
+        : '決済が完了しました。',
+    )
+  }
+
+  const cancelCashPayment = async () => {
+    if (!cashCheckoutId) {
+      return
+    }
+
+    try {
+      await cancelCheckoutRequest(cashCheckoutId)
+    } catch {
+      // ignore cancel errors — close dialog regardless
+    }
+
+    setCashCheckoutId(null)
+    setRequestedCheckoutId(null)
+  }
+
   return {
     cartItems,
     receiptNumber,
@@ -151,6 +208,9 @@ export const useCart = () => {
     setOrderType,
     clearOrder,
     requestPayment,
+    startCashPayment,
+    finalizeCashPayment,
+    cancelCashPayment,
     isAwaitingPayment: requestedCheckoutId !== null,
     paymentCompletedMessage,
     clearPaymentCompletedMessage: () => setPaymentCompletedMessage(null),

@@ -21,6 +21,9 @@ export function PosPage() {
     setOrderType,
     clearOrder,
     requestPayment,
+    startCashPayment,
+    finalizeCashPayment,
+    cancelCashPayment,
     isAwaitingPayment,
     paymentCompletedMessage,
     clearPaymentCompletedMessage,
@@ -62,6 +65,9 @@ export function PosPage() {
         onChangeOrderType={setOrderType}
         onClearOrder={clearOrder}
         onRequestPayment={requestPayment}
+        onStartCashPayment={startCashPayment}
+        onFinalizeCashPayment={finalizeCashPayment}
+        onCancelCashPayment={cancelCashPayment}
         onClearPaymentCompletedMessage={clearPaymentCompletedMessage}
       />
     </div>

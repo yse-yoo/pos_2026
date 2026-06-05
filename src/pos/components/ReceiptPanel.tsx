@@ -21,6 +21,9 @@ type ReceiptPanelProps = {
   onChangeOrderType: (orderType: OrderType) => void
   onClearOrder: () => void
   onRequestPayment: (method: PaymentMethod) => Promise<void>
+  onStartCashPayment: () => Promise<void>
+  onFinalizeCashPayment: () => Promise<void>
+  onCancelCashPayment: () => Promise<void>
   onClearPaymentCompletedMessage: () => void
 }
 
@@ -39,6 +42,9 @@ export function ReceiptPanel({
   onChangeOrderType,
   onClearOrder,
   onRequestPayment,
+  onStartCashPayment,
+  onFinalizeCashPayment,
+  onCancelCashPayment,
   onClearPaymentCompletedMessage,
 }: ReceiptPanelProps) {
   const hasItems = items.length > 0
@@ -66,10 +72,14 @@ export function ReceiptPanel({
       <ReceiptActions
         hasItems={hasItems}
         receiptNumber={receiptNumber}
+        total={total}
         isAwaitingPayment={isAwaitingPayment}
         paymentCompletedMessage={paymentCompletedMessage}
         onClearOrder={onClearOrder}
         onRequestPayment={onRequestPayment}
+        onStartCashPayment={onStartCashPayment}
+        onFinalizeCashPayment={onFinalizeCashPayment}
+        onCancelCashPayment={onCancelCashPayment}
         onClearPaymentCompletedMessage={onClearPaymentCompletedMessage}
       />
     </aside>

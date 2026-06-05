@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ErrorBanner } from '../components/feedback/ErrorBanner'
 import { LoadingState } from '../components/feedback/LoadingState'
 import { useCheckout } from '../checkout/hooks/useCheckout'
@@ -19,8 +19,15 @@ export function CustomerMenuPage() {
     checkoutErrorMessage,
     completePendingCheckout,
     cancelPendingCheckout,
+    refreshCurrentCheckout,
   } = useCheckout()
   const { orderDraft } = useOrderDraft()
+
+  useEffect(() => {
+    if (orderDraft === null && pendingCheckout?.paymentMethod === 'cash') {
+      void refreshCurrentCheckout()
+    }
+  }, [orderDraft, pendingCheckout?.paymentMethod, refreshCurrentCheckout])
   const [selectedCategory, setSelectedCategory] = useState<PosCategoryName>('全て')
   const menuCategories: PosCategoryName[] = useMemo(
     () => [

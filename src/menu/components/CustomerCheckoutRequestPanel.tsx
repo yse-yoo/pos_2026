@@ -87,24 +87,26 @@ export function CustomerCheckoutRequestPanel({
             <ErrorBanner title="決済に失敗しました" message={checkoutErrorMessage} />
           ) : null}
         </div>
-        <div className="grid gap-3 rounded-xl bg-[#f8faf9] p-4 min-[760px]:min-w-64">
-          <Button
-            className="px-4 py-4"
-            variant="primary"
-            onClick={onCompleteCheckout}
-            disabled={isCompletingCheckout}
-          >
-            {isCompletingCheckout ? '決済中...' : checkoutGuidance.buttonLabel}
-          </Button>
-          <Button
-            className="px-4 py-4"
-            variant="ghost"
-            onClick={onCancelCheckout}
-            disabled={isCompletingCheckout}
-          >
-            キャンセル
-          </Button>
-        </div>
+        {pendingCheckout.paymentMethod !== 'cash' ? (
+          <div className="grid gap-3 rounded-xl bg-[#f8faf9] p-4 min-[760px]:min-w-64">
+            <Button
+              className="px-4 py-4"
+              variant="primary"
+              onClick={onCompleteCheckout}
+              disabled={isCompletingCheckout}
+            >
+              {isCompletingCheckout ? '決済中...' : checkoutGuidance.buttonLabel}
+            </Button>
+            <Button
+              className="px-4 py-4"
+              variant="ghost"
+              onClick={onCancelCheckout}
+              disabled={isCompletingCheckout}
+            >
+              キャンセル
+            </Button>
+          </div>
+        ) : null}
       </div>
     </section>
   )

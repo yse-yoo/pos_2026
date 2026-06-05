@@ -9,6 +9,7 @@ import {
 import { CheckoutContext, type PendingCheckout } from './CheckoutContext'
 
 const POLLING_INTERVAL_MS = 2000
+const CASH_POLLING_INTERVAL_MS = 500
 
 export function CheckoutProvider({ children }: PropsWithChildren) {
   const [pendingCheckout, setPendingCheckout] = useState<PendingCheckout | null>(null)
@@ -27,15 +28,18 @@ export function CheckoutProvider({ children }: PropsWithChildren) {
     }
   }, [])
 
+  const pollInterval =
+    pendingCheckout?.paymentMethod === 'cash' ? CASH_POLLING_INTERVAL_MS : POLLING_INTERVAL_MS
+
   useEffect(() => {
     void refreshCurrentCheckout()
 
     const intervalId = window.setInterval(() => {
       void refreshCurrentCheckout()
-    }, POLLING_INTERVAL_MS)
+    }, pollInterval)
 
     return () => window.clearInterval(intervalId)
-  }, [refreshCurrentCheckout])
+  }, [refreshCurrentCheckout, pollInterval])
 
   useEffect(() => {
     if (!trackedCheckoutId) {
@@ -137,6 +141,7 @@ export function CheckoutProvider({ children }: PropsWithChildren) {
         completePendingCheckout,
         cancelPendingCheckout,
         clearCompletedCheckout,
+        refreshCurrentCheckout,
       }}
     >
       {children}

@@ -28,6 +28,7 @@ export type CheckoutContextValue = {
   completePendingCheckout: () => Promise<void>
   cancelPendingCheckout: () => Promise<void>
   clearCompletedCheckout: () => void
+  refreshCurrentCheckout: () => Promise<void>
 }
 
 export const CheckoutContext = createContext<CheckoutContextValue | null>(null)

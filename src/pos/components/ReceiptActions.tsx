@@ -2,24 +2,32 @@ import { useEffect, useState } from 'react'
 import { Button } from '../../components/actions/Button'
 import type { PaymentMethod } from '../hooks/useCart'
 
-type PaymentDialog = 'method' | 'requested' | 'completed' | null
+type PaymentDialog = 'method' | 'cash_confirm' | 'requested' | 'completed' | null
 
 type ReceiptActionsProps = {
   hasItems: boolean
   receiptNumber: number
+  total: number
   isAwaitingPayment: boolean
   paymentCompletedMessage: string | null
   onClearOrder: () => void
   onRequestPayment: (method: PaymentMethod) => Promise<void>
+  onStartCashPayment: () => Promise<void>
+  onFinalizeCashPayment: () => Promise<void>
+  onCancelCashPayment: () => Promise<void>
   onClearPaymentCompletedMessage: () => void
 }
 
 export function ReceiptActions({
   hasItems,
+  total,
   isAwaitingPayment,
   paymentCompletedMessage,
   onClearOrder,
   onRequestPayment,
+  onStartCashPayment,
+  onFinalizeCashPayment,
+  onCancelCashPayment,
   onClearPaymentCompletedMessage,
 }: ReceiptActionsProps) {
   const [paymentDialog, setPaymentDialog] = useState<PaymentDialog>(null)
@@ -63,11 +71,31 @@ export function ReceiptActions({
     setIsRequestingPayment(true)
 
     try {
-      await onRequestPayment(selectedMethod)
-      setPaymentDialog('requested')
+      if (selectedMethod === 'cash') {
+        await onStartCashPayment()
+        setPaymentDialog('cash_confirm')
+      } else {
+        await onRequestPayment(selectedMethod)
+        setPaymentDialog('requested')
+      }
     } finally {
       setIsRequestingPayment(false)
     }
+  }
+
+  const completeCashPayment = async () => {
+    setIsRequestingPayment(true)
+    try {
+      await onFinalizeCashPayment()
+    } finally {
+      setIsRequestingPayment(false)
+    }
+  }
+
+  const cancelCashDialog = async () => {
+    await onCancelCashPayment()
+    setSelectedMethod(null)
+    setPaymentDialog(null)
   }
 
   return (
@@ -140,6 +168,36 @@ export function ReceiptActions({
                       確定
                     </Button>
                   ) : null}
+                </div>
+              </>
+            ) : null}
+
+            {paymentDialog === 'cash_confirm' ? (
+              <>
+                <div className="payment-dialog-header">
+                  <h3 id="payment-dialog-title">現金決済</h3>
+                  <p>お客様の画面に「現金でお支払いください」が表示されています。</p>
+                </div>
+                <div className="py-3 text-center text-2xl font-bold" aria-live="polite">
+                  合計: ¥{total.toLocaleString()}
+                </div>
+                <div className="payment-dialog-actions">
+                  <Button
+                    className="px-4 py-4"
+                    variant="ghost"
+                    onClick={() => void cancelCashDialog()}
+                    disabled={isRequestingPayment}
+                  >
+                    キャンセル
+                  </Button>
+                  <Button
+                    className="px-4 py-4"
+                    variant="primary"
+                    onClick={() => void completeCashPayment()}
+                    disabled={isRequestingPayment}
+                  >
+                    {isRequestingPayment ? '処理中...' : '現金受取完了'}
+                  </Button>
                 </div>
               </>
             ) : null}
