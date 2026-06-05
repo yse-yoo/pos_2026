@@ -1,34 +1,38 @@
 import { useCallback, useEffect, useState, type PropsWithChildren } from 'react'
 import {
   clearOrderDraft,
-  getCurrentOrderDraft,
+  mapOrderDraft,
   saveOrderDraft,
   type OrderDraft,
 } from '../api/orderDraftRepository'
 import { OrderDraftContext } from './OrderDraftContext'
 
-const POLLING_INTERVAL_MS = 2000
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
 export function OrderDraftProvider({ children }: PropsWithChildren) {
   const [orderDraft, setOrderDraft] = useState<OrderDraft | null>(null)
 
-  const refreshOrderDraft = useCallback(async () => {
-    try {
-      setOrderDraft(await getCurrentOrderDraft())
-    } catch {
-      // Order preview polling should not block the menu UI.
-    }
-  }, [])
-
   useEffect(() => {
-    void refreshOrderDraft()
+    const source = new EventSource(`${API_BASE_URL}/api/order-draft/stream`, {
+      withCredentials: true,
+    })
 
-    const intervalId = window.setInterval(() => {
-      void refreshOrderDraft()
-    }, POLLING_INTERVAL_MS)
+    source.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data as string) as {
+          success: boolean
+          data: Parameters<typeof mapOrderDraft>[0] | null
+        }
+        if (payload.success) {
+          setOrderDraft(payload.data ? mapOrderDraft(payload.data) : null)
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
 
-    return () => window.clearInterval(intervalId)
-  }, [refreshOrderDraft])
+    return () => source.close()
+  }, [])
 
   const syncOrderDraft = useCallback(async (draft: Omit<OrderDraft, 'id' | 'updatedAt'>) => {
     setOrderDraft(await saveOrderDraft(draft))

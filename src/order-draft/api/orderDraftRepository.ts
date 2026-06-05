@@ -30,7 +30,7 @@ type OrderDraftResource = {
   updated_at: string
 }
 
-const mapOrderDraft = (draft: OrderDraftResource): OrderDraft => ({
+export const mapOrderDraft = (draft: OrderDraftResource): OrderDraft => ({
   id: Number(draft.id),
   orderType: draft.order_type,
   taxRatePercent: Number(draft.tax_rate),

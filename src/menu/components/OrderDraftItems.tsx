@@ -1,5 +1,6 @@
 import { buildAssetUrl } from '../../lib/api/client'
 import { formatCurrency } from '../../lib/format/currency'
+import { useProductCatalog } from '../../products/hooks/useProductCatalog'
 import type { CartItem } from '../../types/product'
 
 type OrderDraftItemsProps = {
@@ -7,6 +8,9 @@ type OrderDraftItemsProps = {
 }
 
 export function OrderDraftItems({ items }: OrderDraftItemsProps) {
+  const { posProducts } = useProductCatalog()
+  const productById = Object.fromEntries(posProducts.map((p) => [p.id, p]))
+
   if (items.length === 0) {
     return (
       <p className="py-2 text-sm text-[#94a3b8]">まだ商品が追加されていません。</p>
@@ -15,21 +19,26 @@ export function OrderDraftItems({ items }: OrderDraftItemsProps) {
 
   return (
     <div className="grid gap-2">
-      {items.map((item) => (
+      {items.map((item) => {
+        const product = productById[item.id]
+        const imagePath = product?.imagePath || item.imagePath
+        const icon = product?.icon || item.icon
+
+        return (
         <div
           key={item.id}
           className="flex items-center gap-3 rounded-xl border border-[#edf2ef] bg-[#f8faf9] p-3"
         >
           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
-            {item.imagePath ? (
+            {imagePath ? (
               <img
                 className="h-full w-full object-contain"
-                src={buildAssetUrl(item.imagePath)}
+                src={buildAssetUrl(imagePath)}
                 alt=""
               />
             ) : (
               <span className="text-2xl" aria-hidden="true">
-                {item.icon}
+                {icon}
               </span>
             )}
           </div>
@@ -47,7 +56,8 @@ export function OrderDraftItems({ items }: OrderDraftItemsProps) {
             {formatCurrency(item.price * item.quantity)}
           </span>
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
