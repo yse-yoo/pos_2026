@@ -7,15 +7,19 @@ import type { AdminProduct } from '../../types/product'
 type ProductMobileCardProps = {
   product: AdminProduct
   categoryName: string
+  isStatusUpdating?: boolean
   onEditProduct: (productId: number) => void
   onDeleteProduct: (productId: number) => void
+  onToggleStatus: (product: AdminProduct) => void
 }
 
 export function ProductMobileCard({
   product,
   categoryName,
+  isStatusUpdating = false,
   onEditProduct,
   onDeleteProduct,
+  onToggleStatus,
 }: ProductMobileCardProps) {
   return (
     <article className="admin-mobile-card">
@@ -41,11 +45,19 @@ export function ProductMobileCard({
           <dd>{categoryName}</dd>
         </div>
         <div className="admin-mobile-detail-row">
-          <dt>表示状態</dt>
+          <dt>販売状態</dt>
           <dd>
-            <StatusChip tone={product.isActive ? 'active' : 'inactive'}>
-              {product.isActive ? '表示中' : '非表示'}
-            </StatusChip>
+            <button
+              type="button"
+              className="status-toggle-button"
+              onClick={() => onToggleStatus(product)}
+              disabled={isStatusUpdating}
+              aria-label={`${product.name}を${product.isActive ? '売り切れ' : '販売中'}に変更`}
+            >
+              <StatusChip tone={product.isActive ? 'active' : 'inactive'}>
+                {isStatusUpdating ? '更新中...' : product.isActive ? '販売中' : '売り切れ'}
+              </StatusChip>
+            </button>
           </dd>
         </div>
         <div className="admin-mobile-detail-row">

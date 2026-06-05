@@ -7,10 +7,11 @@ import './AppHeader.css'
 type AppHeaderProps = {
   activeView: ViewName
   staffName: string | null
+  isAdmin: boolean
   onLogout: () => void
 }
 
-export function AppHeader({ activeView, staffName, onLogout }: AppHeaderProps) {
+export function AppHeader({ activeView, staffName, isAdmin, onLogout }: AppHeaderProps) {
   const clockLabel = useClock()
 
   return (
@@ -25,7 +26,7 @@ export function AppHeader({ activeView, staffName, onLogout }: AppHeaderProps) {
           </span>
         </div>
 
-        <MainNavigation activeView={activeView} />
+        <MainNavigation activeView={activeView} showAdminLinks={isAdmin} />
 
         <div className="app-header-actions">
           <span className="clock-display">{clockLabel}</span>

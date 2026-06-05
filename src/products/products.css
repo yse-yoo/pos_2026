@@ -206,6 +206,38 @@
   padding: 0.7rem 0.9rem;
 }
 
+.status-toggle-button {
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.status-toggle-button:disabled {
+  cursor: progress;
+  opacity: 0.72;
+}
+
+.status-toggle-button:focus-visible {
+  outline: 3px solid rgba(105, 190, 148, 0.32);
+  outline-offset: 3px;
+}
+
+.status-toggle-button .status-chip {
+  min-width: 5.25rem;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.status-toggle-button:not(:disabled):hover .status-chip {
+  box-shadow: 0 0 0 2px rgba(105, 190, 148, 0.18);
+  transform: translateY(-1px);
+}
+
 .admin-drag-handle {
   display: inline-flex;
   align-items: center;

@@ -9,8 +9,10 @@ type ProductListRowProps = {
   categoryName: string
   isSortMode?: boolean
   isDragging?: boolean
+  isStatusUpdating?: boolean
   onEditProduct: (productId: number) => void
   onDeleteProduct: (productId: number) => void
+  onToggleStatus?: (product: AdminProduct) => void
   onDragStart?: (productId: number) => void
   onDragEnter?: (productId: number) => void
   onDragEnd?: () => void
@@ -21,12 +23,20 @@ export function ProductListRow({
   categoryName,
   isSortMode = false,
   isDragging = false,
+  isStatusUpdating = false,
   onEditProduct,
   onDeleteProduct,
+  onToggleStatus,
   onDragStart,
   onDragEnter,
   onDragEnd,
 }: ProductListRowProps) {
+  const statusChip = (
+    <StatusChip tone={product.isActive ? 'active' : 'inactive'}>
+      {isStatusUpdating ? '更新中...' : product.isActive ? '販売中' : '売り切れ'}
+    </StatusChip>
+  )
+
   return (
     <div
       className={`admin-product-row${isSortMode ? ' is-sortable' : ''}${isDragging ? ' is-dragging' : ''}`}
@@ -73,9 +83,17 @@ export function ProductListRow({
         )}
       </div>
       <div className="admin-product-cell" role="cell">
-        <StatusChip tone={product.isActive ? 'active' : 'inactive'}>
-          {product.isActive ? '表示中' : '非表示'}
-        </StatusChip>
+        {onToggleStatus ? (
+          <button
+            type="button"
+            className="status-toggle-button"
+            onClick={() => onToggleStatus(product)}
+            disabled={isStatusUpdating}
+            aria-label={`${product.name}を${product.isActive ? '売り切れ' : '販売中'}に変更`}
+          >
+            {statusChip}
+          </button>
+        ) : statusChip}
       </div>
       <div className="admin-product-cell" role="cell">
         <StatusChip mono>{product.sortOrder}</StatusChip>

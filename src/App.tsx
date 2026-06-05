@@ -4,7 +4,9 @@ import { AppHeader } from './components/layout/AppHeader'
 import { AdminLoginPage } from './auth/components/AdminLoginPage'
 import { AuthProvider } from './auth/hooks/AuthProvider'
 import { useAuth } from './auth/hooks/useAuth'
+import { CheckoutProvider } from './checkout/hooks/CheckoutProvider'
 import { getViewNameFromPath } from './routing/appRoute'
+import { CustomerMenuPage } from './menu/CustomerMenuPage'
 import { PosPage } from './pos/PosPage'
 import { ProductCreatePage, ProductEditPage } from './products/ProductFormRoutes'
 import { ProductCatalogProvider } from './products/hooks/ProductCatalogProvider'
@@ -24,34 +26,43 @@ function AuthenticatedApp() {
   const location = useLocation()
   const { staff, logout } = useAuth()
   const activeView = getViewNameFromPath(location.pathname)
-  const isAdminRoute = activeView === 'history' || activeView === 'analytics' || activeView === 'products'
+  const isAdmin = staff?.role === 'admin'
+  const isAdminRoute =
+    activeView === 'pos' ||
+    activeView === 'history' ||
+    activeView === 'analytics' ||
+    activeView === 'products'
 
   return (
     <ProductCatalogProvider>
-      <div className="app-shell">
-        <AppHeader
-          activeView={activeView}
-          staffName={staff?.name ?? null}
-          onLogout={() => void logout()}
-        />
+      <CheckoutProvider>
+        <div className="app-shell">
+          <AppHeader
+            activeView={activeView}
+            staffName={staff?.name ?? null}
+            isAdmin={isAdmin}
+            onLogout={() => void logout()}
+          />
 
-        <main className="app-main">
-          {isAdminRoute && !staff ? (
-            <AdminLoginPage />
-          ) : (
-            <Routes>
-              <Route path="/" element={<PosPage />} />
-              <Route path="/pos" element={<Navigate to="/" replace />} />
-              <Route path="/sales/history" element={<SalesHistoryPage />} />
-              <Route path="/sales/trend" element={<SalesAnalyticsPage />} />
-              <Route path="/product" element={<ProductListPage />} />
-              <Route path="/product/create" element={<ProductCreatePage />} />
-              <Route path="/product/:productId/edit" element={<ProductEditPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          )}
-        </main>
-      </div>
+          <main className="app-main">
+            {isAdminRoute && !isAdmin ? (
+              <AdminLoginPage />
+            ) : (
+              <Routes>
+                <Route path="/" element={<CustomerMenuPage />} />
+                <Route path="/menu" element={<Navigate to="/" replace />} />
+                <Route path="/pos" element={<PosPage />} />
+                <Route path="/sales/history" element={<SalesHistoryPage />} />
+                <Route path="/sales/trend" element={<SalesAnalyticsPage />} />
+                <Route path="/product" element={<ProductListPage />} />
+                <Route path="/product/create" element={<ProductCreatePage />} />
+                <Route path="/product/:productId/edit" element={<ProductEditPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            )}
+          </main>
+        </div>
+      </CheckoutProvider>
     </ProductCatalogProvider>
   )
 }

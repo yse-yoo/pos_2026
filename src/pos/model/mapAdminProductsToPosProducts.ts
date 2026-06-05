@@ -6,7 +6,6 @@ export const mapAdminProductsToPosProducts = (
   categoryNameById: Map<number, CategoryName>,
 ) =>
   products
-    .filter((product) => product.isActive)
     .sort((left, right) => left.sortOrder - right.sortOrder || left.id - right.id)
     .map<PosProduct>((product) => ({
       id: product.id,
@@ -15,4 +14,5 @@ export const mapAdminProductsToPosProducts = (
       category: categoryNameById.get(product.categoryId) ?? 'フード',
       icon: product.icon || '・',
       imagePath: product.imagePath,
+      isActive: product.isActive,
     }))

@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useCheckout } from '../../checkout/hooks/useCheckout'
 import type { CartItem, PosProduct } from '../../types/product'
-import { createSale } from '../api/saleRepository'
 
 const ORDER_TYPE_TAX_RATES = {
   dineIn: 0.1,
@@ -11,11 +11,12 @@ export type PaymentMethod = 'cash' | 'card' | 'qr' | 'other' | 'square'
 export type OrderType = keyof typeof ORDER_TYPE_TAX_RATES
 
 export const useCart = () => {
+  const { pendingCheckout, completedCheckoutId, requestCheckout, clearCompletedCheckout } = useCheckout()
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [receiptNumber, setReceiptNumber] = useState(1)
   const [orderType, setOrderType] = useState<OrderType>('dineIn')
-  const [isCompletingPayment, setIsCompletingPayment] = useState(false)
   const [paymentErrorMessage, setPaymentErrorMessage] = useState<string | null>(null)
+  const [requestedCheckoutId, setRequestedCheckoutId] = useState<string | null>(null)
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const taxRate = ORDER_TYPE_TAX_RATES[orderType]
@@ -66,26 +67,40 @@ export const useCart = () => {
     }
   }
 
-  const completePayment = async (method: PaymentMethod) => {
+  useEffect(() => {
+    if (!completedCheckoutId || completedCheckoutId !== requestedCheckoutId) {
+      return
+    }
+
+    setCartItems([])
+    setReceiptNumber((currentNumber) => currentNumber + 1)
+    setRequestedCheckoutId(null)
+    clearCompletedCheckout()
+  }, [clearCompletedCheckout, completedCheckoutId, requestedCheckoutId])
+
+  useEffect(() => {
+    if (requestedCheckoutId && !pendingCheckout && !completedCheckoutId) {
+      setRequestedCheckoutId(null)
+    }
+  }, [completedCheckoutId, pendingCheckout, requestedCheckoutId])
+
+  const requestPayment = async (method: PaymentMethod) => {
     if (cartItems.length === 0) {
       return
     }
 
-    setIsCompletingPayment(true)
     setPaymentErrorMessage(null)
 
-    try {
-      await createSale(cartItems, method, taxRatePercent)
-      setCartItems([])
-      setReceiptNumber((currentNumber) => currentNumber + 1)
-    } catch (error: unknown) {
-      setPaymentErrorMessage(
-        error instanceof Error ? error.message : '会計登録に失敗しました。',
-      )
-      throw error
-    } finally {
-      setIsCompletingPayment(false)
-    }
+    const checkoutId = requestCheckout({
+      items: cartItems,
+      paymentMethod: method,
+      orderType,
+      taxRatePercent,
+      subtotal,
+      tax,
+      total,
+    })
+    setRequestedCheckoutId(checkoutId)
   }
 
   return {
@@ -100,8 +115,8 @@ export const useCart = () => {
     changeQuantity,
     setOrderType,
     clearOrder,
-    completePayment,
-    isCompletingPayment,
+    requestPayment,
+    isAwaitingPayment: requestedCheckoutId !== null,
     paymentErrorMessage,
   }
 }

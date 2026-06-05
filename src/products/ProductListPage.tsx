@@ -8,7 +8,7 @@ import { LoadingState } from '../components/feedback/LoadingState'
 import { PageHeader } from '../components/layout/PageHeader'
 import { PagePanel } from '../components/layout/PagePanel'
 import { getProductEditPath, productCreatePath } from '../routing/appRoute'
-import type { StatusFilter } from '../types/product'
+import type { AdminProduct, StatusFilter } from '../types/product'
 import { ProductListRow } from './components/ProductListRow'
 import { ProductMobileCard } from './components/ProductMobileCard'
 import { useProductCatalog } from './hooks/useProductCatalog'
@@ -32,12 +32,14 @@ export function ProductListPage() {
     setSelectedCategoryId,
     setSelectedStatus,
     deleteProduct,
+    updateProduct,
     reorderProducts,
   } = useProductCatalog()
   const [isSortMode, setIsSortMode] = useState(false)
   const [sortableProductIds, setSortableProductIds] = useState<number[]>([])
   const [draggingProductId, setDraggingProductId] = useState<number | null>(null)
   const [isSavingOrder, setIsSavingOrder] = useState(false)
+  const [statusUpdatingProductId, setStatusUpdatingProductId] = useState<number | null>(null)
 
   const productById = new Map(products.map((product) => [product.id, product]))
   const visibleProducts = isSortMode
@@ -50,6 +52,32 @@ export function ProductListPage() {
     const shouldDelete = window.confirm('この商品を削除しますか？')
     if (shouldDelete) {
       await deleteProduct(productId)
+    }
+  }
+
+  const handleToggleProductStatus = async (product: AdminProduct) => {
+    const nextIsActive = !product.isActive
+    const nextStatusLabel = nextIsActive ? '販売中' : '売り切れ'
+    const shouldUpdate = window.confirm(`${product.name}を${nextStatusLabel}に変更しますか？`)
+
+    if (!shouldUpdate) {
+      return
+    }
+
+    setStatusUpdatingProductId(product.id)
+
+    try {
+      await updateProduct(product.id, {
+        name: product.name,
+        price: product.price,
+        categoryId: product.categoryId,
+        icon: product.icon,
+        imagePath: product.imagePath,
+        isActive: nextIsActive,
+        sortOrder: product.sortOrder,
+      })
+    } finally {
+      setStatusUpdatingProductId(null)
     }
   }
 
@@ -159,8 +187,8 @@ export function ProductListPage() {
 
         {!isLoading ? <div className="admin-summary-grid">
           <SummaryCard label="登録商品" value={products.length} />
-          <SummaryCard label="表示中" value={activeProductCount} />
-          <SummaryCard label="非表示" value={inactiveProductCount} />
+          <SummaryCard label="販売中" value={activeProductCount} />
+          <SummaryCard label="売り切れ" value={inactiveProductCount} />
         </div> : null}
 
         {!isLoading && isSortMode ? (
@@ -199,7 +227,7 @@ export function ProductListPage() {
             </label>
 
             <label className="admin-filter-field">
-              <span>表示状態絞り込み</span>
+              <span>販売状態絞り込み</span>
               <select
                 className="admin-select"
                 value={selectedStatus}
@@ -208,8 +236,8 @@ export function ProductListPage() {
                 }
               >
                 <option value="all">すべて</option>
-                <option value="active">表示中</option>
-                <option value="inactive">非表示</option>
+                <option value="active">販売中</option>
+                <option value="inactive">売り切れ</option>
               </select>
             </label>
           </div>
@@ -242,7 +270,7 @@ export function ProductListPage() {
                     <div className="admin-product-heading" role="columnheader">カテゴリ</div>
                     <div className="admin-product-heading" role="columnheader">アイコン</div>
                     <div className="admin-product-heading" role="columnheader">画像</div>
-                    <div className="admin-product-heading" role="columnheader">表示状態</div>
+                    <div className="admin-product-heading" role="columnheader">販売状態</div>
                     <div className="admin-product-heading" role="columnheader">並び順</div>
                     <div className="admin-product-heading" role="columnheader">
                       {isSortMode ? '並び替え' : '操作'}
@@ -257,8 +285,10 @@ export function ProductListPage() {
                         categoryName={categoryNameById.get(product.categoryId) ?? ''}
                         isSortMode={isSortMode}
                         isDragging={draggingProductId === product.id}
+                        isStatusUpdating={statusUpdatingProductId === product.id}
                         onEditProduct={(productId) => navigate(getProductEditPath(productId))}
                         onDeleteProduct={handleDeleteProduct}
+                        onToggleStatus={isSortMode ? undefined : handleToggleProductStatus}
                         onDragStart={setDraggingProductId}
                         onDragEnter={moveSortableProduct}
                         onDragEnd={() => setDraggingProductId(null)}
@@ -275,8 +305,10 @@ export function ProductListPage() {
                   key={product.id}
                   product={product}
                   categoryName={categoryNameById.get(product.categoryId) ?? ''}
+                  isStatusUpdating={statusUpdatingProductId === product.id}
                   onEditProduct={(productId) => navigate(getProductEditPath(productId))}
                   onDeleteProduct={handleDeleteProduct}
+                  onToggleStatus={handleToggleProductStatus}
                 />
               ))}
             </div>

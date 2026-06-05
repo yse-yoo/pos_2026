@@ -24,6 +24,7 @@ export type PosProduct = {
   category: CategoryName
   icon: string
   imagePath: string
+  isActive: boolean
 }
 
 export type CartItem = PosProduct & {

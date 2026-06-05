@@ -311,14 +311,14 @@ export function ProductFormPage({ mode, productId, onBack }: ProductFormPageProp
             </label>
 
             <label className="admin-switch-field">
-              <span>表示状態</span>
+              <span>販売状態</span>
               <span className="admin-switch-control">
                 <input
                   type="checkbox"
                   checked={form.isActive}
                   onChange={(event) => updateField('isActive', event.target.checked)}
                 />
-                <strong>{form.isActive ? '表示中' : '非表示'}</strong>
+                <strong>{form.isActive ? '販売中' : '売り切れ'}</strong>
               </span>
             </label>
           </div>

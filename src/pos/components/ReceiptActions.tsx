@@ -1,30 +1,27 @@
-import { type ReactNode, useState } from 'react'
-import { QRCodeSVG } from 'qrcode.react'
+import { useState } from 'react'
 import { Button } from '../../components/actions/Button'
-import { formatReceiptNumber } from '../../lib/format/receipt'
 import type { PaymentMethod } from '../hooks/useCart'
 
-type PaymentDialog = 'cash' | 'qr' | 'square' | 'processing' | 'completed' | null
+type PaymentDialog = 'method' | 'requested' | null
 
 type ReceiptActionsProps = {
   hasItems: boolean
   receiptNumber: number
-  isCompletingPayment: boolean
+  isAwaitingPayment: boolean
   onClearOrder: () => void
-  onCompletePayment: (method: PaymentMethod) => Promise<void>
+  onRequestPayment: (method: PaymentMethod) => Promise<void>
 }
 
 export function ReceiptActions({
   hasItems,
-  receiptNumber,
-  isCompletingPayment,
+  isAwaitingPayment,
   onClearOrder,
-  onCompletePayment,
+  onRequestPayment,
 }: ReceiptActionsProps) {
   const [paymentDialog, setPaymentDialog] = useState<PaymentDialog>(null)
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null)
-  const [completedPaymentLabel, setCompletedPaymentLabel] = useState('')
-  const isPaymentLocked = isCompletingPayment || paymentDialog === 'processing'
+  const [isRequestingPayment, setIsRequestingPayment] = useState(false)
+  const isPaymentLocked = isAwaitingPayment || isRequestingPayment
   const isDisabled = !hasItems || isPaymentLocked
 
   const paymentMethodLabels: Record<PaymentMethod, string> = {
@@ -32,68 +29,48 @@ export function ReceiptActions({
     qr: 'QR',
     other: '交通系',
     card: 'クレジット',
-    square: 'Square カード',
-  }
-
-  const openDialog = (dialog: Exclude<PaymentDialog, 'processing' | 'completed' | null>) => {
-    setSelectedMethod(null)
-    setCompletedPaymentLabel('')
-    setPaymentDialog(dialog)
+    square: 'カード',
   }
 
   const closeDialog = () => {
     if (!isPaymentLocked) {
       setSelectedMethod(null)
-      setCompletedPaymentLabel('')
       setPaymentDialog(null)
     }
   }
 
-  const backToSquare = () => {
-    if (!isPaymentLocked) {
-      setSelectedMethod(null)
-      setPaymentDialog('square')
-    }
+  const closeRequestedDialog = () => {
+    setPaymentDialog(null)
   }
 
-  const completePayment = async (method: PaymentMethod, displayLabel?: string) => {
-    setCompletedPaymentLabel(displayLabel ?? '')
-    setPaymentDialog('processing')
+  const requestPayment = async () => {
+    if (!selectedMethod) {
+      return
+    }
+
+    setIsRequestingPayment(true)
 
     try {
-      await onCompletePayment(method)
-      setPaymentDialog('completed')
-    } catch {
-      setCompletedPaymentLabel('')
-      setPaymentDialog(null)
+      await onRequestPayment(selectedMethod)
+      setPaymentDialog('requested')
+    } finally {
+      setIsRequestingPayment(false)
     }
   }
-
-  const confirmPayment = (method: PaymentMethod) => {
-    if (method === 'cash') {
-      setPaymentDialog('cash')
-    } else if (method === 'qr') {
-      setPaymentDialog('qr')
-    } else {
-      void completePayment(method, paymentMethodLabels[method])
-    }
-  }
-
-  const qrValue = formatReceiptNumber(receiptNumber)
 
   return (
     <>
       <div className="receipt-actions">
-        <Button className="px-4 py-4" variant="ghost" onClick={onClearOrder} disabled={!hasItems}>
+        <Button className="px-4 py-4" variant="ghost" onClick={onClearOrder} disabled={!hasItems || isPaymentLocked}>
           クリア
         </Button>
         <Button
           variant="primary"
           className="px-4 py-4 receipt-confirm-button"
-          onClick={() => openDialog('square')}
+          onClick={() => setPaymentDialog('method')}
           disabled={isDisabled}
         >
-          注文確定
+          {isAwaitingPayment ? '決済待ち' : '注文確定'}
         </Button>
       </div>
 
@@ -105,11 +82,11 @@ export function ReceiptActions({
             aria-modal="true"
             aria-labelledby="payment-dialog-title"
           >
-            {paymentDialog === 'square' ? (
+            {paymentDialog === 'method' ? (
               <>
                 <div className="payment-dialog-header">
                   <h3 id="payment-dialog-title">お支払い方法</h3>
-                  <p>支払い方法を選択してください。</p>
+                  <p>支払い方法を選択して確定すると、メニュー画面に決済依頼を通知します。</p>
                 </div>
                 <div className="payment-method-options">
                   {(
@@ -145,7 +122,7 @@ export function ReceiptActions({
                     <Button
                       className="px-4 py-4"
                       variant="primary"
-                      onClick={() => confirmPayment(selectedMethod)}
+                      onClick={() => void requestPayment()}
                       disabled={isPaymentLocked}
                     >
                       確定
@@ -155,58 +132,25 @@ export function ReceiptActions({
               </>
             ) : null}
 
-            {paymentDialog === 'cash' ? (
-              <PaymentDialogContent
-                title="現金会計"
-                message="現金を投入してください。"
-                isCompletingPayment={isCompletingPayment}
-                onCancel={backToSquare}
-                actions={
-                  <Button
-                    className="px-4 py-4"
-                    variant="primary"
-                    onClick={() => void completePayment('cash', '現金')}
-                    disabled={isCompletingPayment}
-                  >
-                    現金で会計
+            {paymentDialog === 'requested' ? (
+              <>
+                <div className="payment-dialog-header">
+                  <h3 id="payment-dialog-title">決済依頼を通知しました</h3>
+                  <p>
+                    {selectedMethod
+                      ? `${paymentMethodLabels[selectedMethod]}での決済依頼をメニュー画面に表示しています。`
+                      : '決済依頼をメニュー画面に表示しています。'}
+                  </p>
+                </div>
+                <div className="payment-dialog-status" aria-live="polite">
+                  メニュー画面の決済ボタンが押されるまで待機してください。
+                </div>
+                <div className="payment-dialog-actions">
+                  <Button className="px-4 py-4" variant="primary" onClick={closeRequestedDialog}>
+                    閉じる
                   </Button>
-                }
-              />
-            ) : null}
-
-            {paymentDialog === 'qr' ? (
-              <PaymentDialogContent
-                title="QR決済"
-                message="QRコードをお客様に提示し、読み取っていただいてください。"
-                isCompletingPayment={isCompletingPayment}
-                onCancel={backToSquare}
-                body={
-                  <div className="flex flex-col items-center gap-3 py-4">
-                    <div className="p-3 bg-white rounded-xl border border-[#e2e8f0]">
-                      <QRCodeSVG value={qrValue} size={180} />
-                    </div>
-                    <span className="font-mono text-sm font-bold text-slate-500">{qrValue}</span>
-                  </div>
-                }
-                actions={
-                  <Button
-                    className="px-4 py-4"
-                    variant="primary"
-                    onClick={() => void completePayment('qr', 'QR')}
-                    disabled={isCompletingPayment}
-                  >
-                    QR決済
-                  </Button>
-                }
-              />
-            ) : null}
-
-            {paymentDialog === 'processing' ? (
-              <PaymentProcessingContent paymentLabel={completedPaymentLabel} />
-            ) : null}
-
-            {paymentDialog === 'completed' ? (
-              <PaymentCompletedContent paymentLabel={completedPaymentLabel} onClose={closeDialog} />
+                </div>
+              </>
             ) : null}
           </div>
         </div>
@@ -214,86 +158,3 @@ export function ReceiptActions({
     </>
   )
 }
-
-type PaymentProcessingContentProps = {
-  paymentLabel: string
-}
-
-function PaymentProcessingContent({ paymentLabel }: PaymentProcessingContentProps) {
-  return (
-    <>
-      <div className="payment-dialog-header">
-        <h3 id="payment-dialog-title">決済処理</h3>
-        <p>{paymentLabel ? `${paymentLabel}で決済します。端末で操作してください。` : '決済します。端末で操作してください。'}</p>
-      </div>
-
-      <div className="payment-processing-state" aria-live="polite">
-        <span className="payment-processing-spinner" aria-hidden="true" />
-        <span>決済中...</span>
-      </div>
-    </>
-  )
-}
-
-type PaymentCompletedContentProps = {
-  paymentLabel: string
-  onClose: () => void
-}
-
-function PaymentCompletedContent({ paymentLabel, onClose }: PaymentCompletedContentProps) {
-  return (
-    <>
-      <div className="payment-dialog-header">
-        <h3 id="payment-dialog-title">決済完了</h3>
-        <p>{paymentLabel ? `${paymentLabel}での決済が完了しました。` : '決済が完了しました。'}</p>
-      </div>
-
-      <div className="payment-dialog-status" aria-live="polite">
-        決済が完了しました。
-      </div>
-
-      <div className="payment-dialog-actions">
-        <Button className="px-4 py-4" variant="primary" onClick={onClose}>
-          閉じる
-        </Button>
-      </div>
-    </>
-  )
-}
-
-type PaymentDialogContentProps = {
-  title: string
-  message: string
-  isCompletingPayment: boolean
-  actions: ReactNode
-  body?: ReactNode
-  onCancel: () => void
-}
-
-function PaymentDialogContent({
-  title,
-  message,
-  isCompletingPayment,
-  actions,
-  body,
-  onCancel,
-}: PaymentDialogContentProps) {
-  return (
-    <>
-      <div className="payment-dialog-header">
-        <h3 id="payment-dialog-title">{title}</h3>
-        <p>{message}</p>
-      </div>
-
-      {body ?? null}
-
-      <div className="payment-dialog-actions">
-        <Button className="px-4 py-4" variant="ghost" onClick={onCancel} disabled={isCompletingPayment}>
-          戻る
-        </Button>
-        {actions}
-      </div>
-    </>
-  )
-}
-
