@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useCheckout } from '../../checkout/hooks/useCheckout'
+import { useOrderDraft } from '../../order-draft/hooks/useOrderDraft'
 import type { CartItem, PosProduct } from '../../types/product'
 
 const ORDER_TYPE_TAX_RATES = {
@@ -11,11 +12,13 @@ export type PaymentMethod = 'cash' | 'card' | 'qr' | 'other' | 'square'
 export type OrderType = keyof typeof ORDER_TYPE_TAX_RATES
 
 export const useCart = () => {
-  const { pendingCheckout, completedCheckoutId, requestCheckout, clearCompletedCheckout } = useCheckout()
+  const { completedCheckout, completedCheckoutId, requestCheckout, clearCompletedCheckout } = useCheckout()
+  const { syncOrderDraft, clearSyncedOrderDraft } = useOrderDraft()
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [receiptNumber, setReceiptNumber] = useState(1)
   const [orderType, setOrderType] = useState<OrderType>('dineIn')
   const [paymentErrorMessage, setPaymentErrorMessage] = useState<string | null>(null)
+  const [paymentCompletedMessage, setPaymentCompletedMessage] = useState<string | null>(null)
   const [requestedCheckoutId, setRequestedCheckoutId] = useState<string | null>(null)
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -23,6 +26,39 @@ export const useCart = () => {
   const taxRatePercent = Math.round(taxRate * 100)
   const tax = Math.round(subtotal * taxRate)
   const total = subtotal + tax
+
+  useEffect(() => {
+    const syncDraft = async () => {
+      if (cartItems.length === 0) {
+        await clearSyncedOrderDraft()
+        return
+      }
+
+      await syncOrderDraft({
+        items: cartItems,
+        orderType,
+        taxRatePercent,
+        subtotal,
+        tax,
+        total,
+      })
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void syncDraft()
+    }, 250)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [
+    cartItems,
+    clearSyncedOrderDraft,
+    orderType,
+    subtotal,
+    syncOrderDraft,
+    tax,
+    taxRatePercent,
+    total,
+  ])
 
   const addItem = (product: PosProduct) => {
     setCartItems((currentItems) => {
@@ -72,17 +108,16 @@ export const useCart = () => {
       return
     }
 
+    setPaymentCompletedMessage(
+      completedCheckout?.sale?.receiptNumber
+        ? `決済が完了しました。レシート番号: ${completedCheckout.sale.receiptNumber}`
+        : '決済が完了しました。',
+    )
     setCartItems([])
     setReceiptNumber((currentNumber) => currentNumber + 1)
     setRequestedCheckoutId(null)
     clearCompletedCheckout()
-  }, [clearCompletedCheckout, completedCheckoutId, requestedCheckoutId])
-
-  useEffect(() => {
-    if (requestedCheckoutId && !pendingCheckout && !completedCheckoutId) {
-      setRequestedCheckoutId(null)
-    }
-  }, [completedCheckoutId, pendingCheckout, requestedCheckoutId])
+  }, [clearCompletedCheckout, completedCheckout, completedCheckoutId, requestedCheckoutId])
 
   const requestPayment = async (method: PaymentMethod) => {
     if (cartItems.length === 0) {
@@ -91,7 +126,7 @@ export const useCart = () => {
 
     setPaymentErrorMessage(null)
 
-    const checkoutId = requestCheckout({
+    const checkoutId = await requestCheckout({
       items: cartItems,
       paymentMethod: method,
       orderType,
@@ -117,6 +152,8 @@ export const useCart = () => {
     clearOrder,
     requestPayment,
     isAwaitingPayment: requestedCheckoutId !== null,
+    paymentCompletedMessage,
+    clearPaymentCompletedMessage: () => setPaymentCompletedMessage(null),
     paymentErrorMessage,
   }
 }

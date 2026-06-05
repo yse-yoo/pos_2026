@@ -5,6 +5,7 @@ import { AdminLoginPage } from './auth/components/AdminLoginPage'
 import { AuthProvider } from './auth/hooks/AuthProvider'
 import { useAuth } from './auth/hooks/useAuth'
 import { CheckoutProvider } from './checkout/hooks/CheckoutProvider'
+import { OrderDraftProvider } from './order-draft/hooks/OrderDraftProvider'
 import { getViewNameFromPath } from './routing/appRoute'
 import { CustomerMenuPage } from './menu/CustomerMenuPage'
 import { PosPage } from './pos/PosPage'
@@ -36,7 +37,8 @@ function AuthenticatedApp() {
   return (
     <ProductCatalogProvider>
       <CheckoutProvider>
-        <div className="app-shell">
+        <OrderDraftProvider>
+          <div className="app-shell">
           <AppHeader
             activeView={activeView}
             staffName={staff?.name ?? null}
@@ -61,7 +63,8 @@ function AuthenticatedApp() {
               </Routes>
             )}
           </main>
-        </div>
+          </div>
+        </OrderDraftProvider>
       </CheckoutProvider>
     </ProductCatalogProvider>
   )

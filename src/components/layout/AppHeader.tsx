@@ -39,7 +39,7 @@ export function AppHeader({ activeView, staffName, isAdmin, onLogout }: AppHeade
             </>
           ) : (
             <Link to="/product" className="admin-link-button">
-              管理者
+              ログイン
             </Link>
           )}
         </div>

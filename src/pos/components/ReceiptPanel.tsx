@@ -15,11 +15,13 @@ type ReceiptPanelProps = {
   tax: number
   total: number
   isAwaitingPayment: boolean
+  paymentCompletedMessage: string | null
   paymentErrorMessage: string | null
   onChangeQuantity: (productId: number, delta: number) => void
   onChangeOrderType: (orderType: OrderType) => void
   onClearOrder: () => void
   onRequestPayment: (method: PaymentMethod) => Promise<void>
+  onClearPaymentCompletedMessage: () => void
 }
 
 export function ReceiptPanel({
@@ -31,11 +33,13 @@ export function ReceiptPanel({
   tax,
   total,
   isAwaitingPayment,
+  paymentCompletedMessage,
   paymentErrorMessage,
   onChangeQuantity,
   onChangeOrderType,
   onClearOrder,
   onRequestPayment,
+  onClearPaymentCompletedMessage,
 }: ReceiptPanelProps) {
   const hasItems = items.length > 0
 
@@ -63,8 +67,10 @@ export function ReceiptPanel({
         hasItems={hasItems}
         receiptNumber={receiptNumber}
         isAwaitingPayment={isAwaitingPayment}
+        paymentCompletedMessage={paymentCompletedMessage}
         onClearOrder={onClearOrder}
         onRequestPayment={onRequestPayment}
+        onClearPaymentCompletedMessage={onClearPaymentCompletedMessage}
       />
     </aside>
   )

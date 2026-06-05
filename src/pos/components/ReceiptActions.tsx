@@ -1,22 +1,26 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '../../components/actions/Button'
 import type { PaymentMethod } from '../hooks/useCart'
 
-type PaymentDialog = 'method' | 'requested' | null
+type PaymentDialog = 'method' | 'requested' | 'completed' | null
 
 type ReceiptActionsProps = {
   hasItems: boolean
   receiptNumber: number
   isAwaitingPayment: boolean
+  paymentCompletedMessage: string | null
   onClearOrder: () => void
   onRequestPayment: (method: PaymentMethod) => Promise<void>
+  onClearPaymentCompletedMessage: () => void
 }
 
 export function ReceiptActions({
   hasItems,
   isAwaitingPayment,
+  paymentCompletedMessage,
   onClearOrder,
   onRequestPayment,
+  onClearPaymentCompletedMessage,
 }: ReceiptActionsProps) {
   const [paymentDialog, setPaymentDialog] = useState<PaymentDialog>(null)
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null)
@@ -32,6 +36,12 @@ export function ReceiptActions({
     square: 'カード',
   }
 
+  useEffect(() => {
+    if (paymentCompletedMessage) {
+      setPaymentDialog('completed')
+    }
+  }, [paymentCompletedMessage])
+
   const closeDialog = () => {
     if (!isPaymentLocked) {
       setSelectedMethod(null)
@@ -39,7 +49,9 @@ export function ReceiptActions({
     }
   }
 
-  const closeRequestedDialog = () => {
+  const closeCompletedDialog = () => {
+    onClearPaymentCompletedMessage()
+    setSelectedMethod(null)
     setPaymentDialog(null)
   }
 
@@ -135,19 +147,30 @@ export function ReceiptActions({
             {paymentDialog === 'requested' ? (
               <>
                 <div className="payment-dialog-header">
-                  <h3 id="payment-dialog-title">決済依頼を通知しました</h3>
-                  <p>
+                  <h3 id="payment-dialog-title">
                     {selectedMethod
-                      ? `${paymentMethodLabels[selectedMethod]}での決済依頼をメニュー画面に表示しています。`
-                      : '決済依頼をメニュー画面に表示しています。'}
-                  </p>
+                      ? `「${paymentMethodLabels[selectedMethod]}」決済依頼中`
+                      : '決済依頼中'}
+                  </h3>
+                </div>
+                <div className="py-3 text-center text-xl" aria-live="polite">
+                  ユーザが決済が完了するまでお待ちください。
+                </div>
+              </>
+            ) : null}
+
+            {paymentDialog === 'completed' ? (
+              <>
+                <div className="payment-dialog-header">
+                  <h3 id="payment-dialog-title">決済が完了しました</h3>
+                  <p>{paymentCompletedMessage ?? '決済が完了しました。'}</p>
                 </div>
                 <div className="payment-dialog-status" aria-live="polite">
-                  メニュー画面の決済ボタンが押されるまで待機してください。
+                  次の注文を開始できます。
                 </div>
                 <div className="payment-dialog-actions">
-                  <Button className="px-4 py-4" variant="primary" onClick={closeRequestedDialog}>
-                    閉じる
+                  <Button className="px-4 py-4" variant="primary" onClick={closeCompletedDialog}>
+                    注文開始
                   </Button>
                 </div>
               </>

@@ -1,63 +1,86 @@
-import { useEffect, useState, type PropsWithChildren } from 'react'
-import { createSale } from '../../pos/api/saleRepository'
+import { useCallback, useEffect, useState, type PropsWithChildren } from 'react'
+import {
+  cancelCheckoutRequest,
+  completeCheckoutRequest,
+  createCheckoutRequest,
+  getCheckoutRequest,
+  getCurrentCheckoutRequest,
+} from '../api/checkoutRequestRepository'
 import { CheckoutContext, type PendingCheckout } from './CheckoutContext'
 
-const PENDING_CHECKOUT_KEY = 'pos_2026_pending_checkout'
-const COMPLETED_CHECKOUT_KEY = 'pos_2026_completed_checkout_id'
-
-const createCheckoutId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`
-
-const readPendingCheckout = () => {
-  const value = window.localStorage.getItem(PENDING_CHECKOUT_KEY)
-  if (!value) {
-    return null
-  }
-
-  try {
-    return JSON.parse(value) as PendingCheckout
-  } catch {
-    window.localStorage.removeItem(PENDING_CHECKOUT_KEY)
-    return null
-  }
-}
+const POLLING_INTERVAL_MS = 2000
 
 export function CheckoutProvider({ children }: PropsWithChildren) {
-  const [pendingCheckout, setPendingCheckout] = useState<PendingCheckout | null>(() =>
-    readPendingCheckout(),
-  )
-  const [completedCheckoutId, setCompletedCheckoutId] = useState<string | null>(() =>
-    window.localStorage.getItem(COMPLETED_CHECKOUT_KEY),
-  )
+  const [pendingCheckout, setPendingCheckout] = useState<PendingCheckout | null>(null)
+  const [completedCheckout, setCompletedCheckout] = useState<PendingCheckout | null>(null)
+  const [completedCheckoutId, setCompletedCheckoutId] = useState<string | null>(null)
+  const [trackedCheckoutId, setTrackedCheckoutId] = useState<string | null>(null)
   const [isCompletingCheckout, setIsCompletingCheckout] = useState(false)
   const [checkoutErrorMessage, setCheckoutErrorMessage] = useState<string | null>(null)
 
-  useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === PENDING_CHECKOUT_KEY) {
-        setPendingCheckout(event.newValue ? (JSON.parse(event.newValue) as PendingCheckout) : null)
-      }
-
-      if (event.key === COMPLETED_CHECKOUT_KEY) {
-        setCompletedCheckoutId(event.newValue)
-      }
+  const refreshCurrentCheckout = useCallback(async () => {
+    try {
+      const currentCheckout = await getCurrentCheckoutRequest()
+      setPendingCheckout(currentCheckout)
+    } catch {
+      // Polling errors should not hide the menu. User actions surface concrete errors.
     }
-
-    window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
   }, [])
 
-  const requestCheckout = (checkout: Omit<PendingCheckout, 'id' | 'createdAt'>) => {
-    const nextCheckout: PendingCheckout = {
-      ...checkout,
-      id: createCheckoutId(),
-      createdAt: new Date().toISOString(),
+  useEffect(() => {
+    void refreshCurrentCheckout()
+
+    const intervalId = window.setInterval(() => {
+      void refreshCurrentCheckout()
+    }, POLLING_INTERVAL_MS)
+
+    return () => window.clearInterval(intervalId)
+  }, [refreshCurrentCheckout])
+
+  useEffect(() => {
+    if (!trackedCheckoutId) {
+      return undefined
     }
 
+    const refreshTrackedCheckout = async () => {
+      try {
+        const checkout = await getCheckoutRequest(trackedCheckoutId)
+
+        if (checkout.status === 'completed') {
+          setCompletedCheckout(checkout)
+          setCompletedCheckoutId(checkout.id)
+          setPendingCheckout(null)
+          setTrackedCheckoutId(null)
+          return
+        }
+
+        if (checkout.status === 'canceled') {
+          setPendingCheckout(null)
+          setTrackedCheckoutId(null)
+        }
+      } catch {
+        // Keep polling; transient network/backend errors should not drop POS synchronization.
+      }
+    }
+
+    void refreshTrackedCheckout()
+
+    const intervalId = window.setInterval(() => {
+      void refreshTrackedCheckout()
+    }, POLLING_INTERVAL_MS)
+
+    return () => window.clearInterval(intervalId)
+  }, [trackedCheckoutId])
+
+  const requestCheckout = async (
+    checkout: Omit<PendingCheckout, 'id' | 'status' | 'saleId' | 'sale' | 'createdAt'>,
+  ) => {
+    const nextCheckout = await createCheckoutRequest(checkout)
     setPendingCheckout(nextCheckout)
+    setCompletedCheckout(null)
     setCompletedCheckoutId(null)
+    setTrackedCheckoutId(nextCheckout.id)
     setCheckoutErrorMessage(null)
-    window.localStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify(nextCheckout))
-    window.localStorage.removeItem(COMPLETED_CHECKOUT_KEY)
     return nextCheckout.id
   }
 
@@ -70,15 +93,8 @@ export function CheckoutProvider({ children }: PropsWithChildren) {
     setCheckoutErrorMessage(null)
 
     try {
-      await createSale(
-        pendingCheckout.items,
-        pendingCheckout.paymentMethod,
-        pendingCheckout.taxRatePercent,
-      )
-      setCompletedCheckoutId(pendingCheckout.id)
+      await completeCheckoutRequest(pendingCheckout.id)
       setPendingCheckout(null)
-      window.localStorage.setItem(COMPLETED_CHECKOUT_KEY, pendingCheckout.id)
-      window.localStorage.removeItem(PENDING_CHECKOUT_KEY)
     } catch (error: unknown) {
       setCheckoutErrorMessage(
         error instanceof Error ? error.message : '決済登録に失敗しました。',
@@ -88,21 +104,32 @@ export function CheckoutProvider({ children }: PropsWithChildren) {
     }
   }
 
-  const cancelPendingCheckout = () => {
-    setPendingCheckout(null)
-    setCheckoutErrorMessage(null)
-    window.localStorage.removeItem(PENDING_CHECKOUT_KEY)
+  const cancelPendingCheckout = async () => {
+    if (!pendingCheckout) {
+      return
+    }
+
+    try {
+      await cancelCheckoutRequest(pendingCheckout.id)
+      setPendingCheckout(null)
+      setCheckoutErrorMessage(null)
+    } catch (error: unknown) {
+      setCheckoutErrorMessage(
+        error instanceof Error ? error.message : '決済依頼のキャンセルに失敗しました。',
+      )
+    }
   }
 
   const clearCompletedCheckout = () => {
+    setCompletedCheckout(null)
     setCompletedCheckoutId(null)
-    window.localStorage.removeItem(COMPLETED_CHECKOUT_KEY)
   }
 
   return (
     <CheckoutContext.Provider
       value={{
         pendingCheckout,
+        completedCheckout,
         completedCheckoutId,
         isCompletingCheckout,
         checkoutErrorMessage,

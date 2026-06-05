@@ -22,6 +22,8 @@ export function PosPage() {
     clearOrder,
     requestPayment,
     isAwaitingPayment,
+    paymentCompletedMessage,
+    clearPaymentCompletedMessage,
     paymentErrorMessage,
   } = useCart()
   const [selectedCategory, setSelectedCategory] = useState<PosCategoryName>('全て')
@@ -54,11 +56,13 @@ export function PosPage() {
         tax={tax}
         total={total}
         isAwaitingPayment={isAwaitingPayment}
+        paymentCompletedMessage={paymentCompletedMessage}
         paymentErrorMessage={paymentErrorMessage}
         onChangeQuantity={changeQuantity}
         onChangeOrderType={setOrderType}
         onClearOrder={clearOrder}
         onRequestPayment={requestPayment}
+        onClearPaymentCompletedMessage={clearPaymentCompletedMessage}
       />
     </div>
   )
