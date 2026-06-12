@@ -10,14 +10,14 @@ type MainNavigationProps = {
 export function MainNavigation({ activeView, showAdminLinks }: MainNavigationProps) {
   return (
     <nav className="main-navigation" aria-label="メインナビゲーション">
-      <Link
-        to={customerMenuPath}
-        className={`main-navigation-button${activeView === 'menu' ? ' is-active' : ''}`}
-      >
-        メニュー
-      </Link>
       {showAdminLinks ? (
         <>
+          <Link
+            to={customerMenuPath}
+            className={`main-navigation-button${activeView === 'menu' ? ' is-active' : ''}`}
+          >
+            メニュー
+          </Link>
           <Link
             to={posRegisterPath}
             className={`main-navigation-button${activeView === 'pos' ? ' is-active' : ''}`}
