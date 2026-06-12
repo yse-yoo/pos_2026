@@ -5,6 +5,12 @@
   background: var(--brand);
   border-bottom: 1px solid var(--brand-border);
   box-shadow: 0 8px 18px rgba(61, 103, 80, 0.08);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.app-header.is-authenticated {
+  background: #263f35;
+  border-bottom-color: rgba(238, 246, 242, 0.16);
 }
 
 .app-header-inner {
@@ -47,6 +53,13 @@
   align-items: center;
   gap: 0.35rem;
   flex-wrap: wrap;
+  transition: background-color 0.2s ease;
+}
+
+.app-header.is-authenticated .main-navigation {
+  padding: 0.25rem;
+  border-radius: 0.875rem;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .main-navigation-button {

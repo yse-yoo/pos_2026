@@ -15,7 +15,7 @@ export function AppHeader({ activeView, staffName, isAdmin, onLogout }: AppHeade
   const clockLabel = useClock()
 
   return (
-    <header className="app-header">
+    <header className={`app-header${staffName ? ' is-authenticated' : ''}`}>
       <div className="app-header-inner">
         <div className="brand-group">
           <span className="brand-mark" aria-hidden="true">

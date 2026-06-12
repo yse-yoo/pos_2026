@@ -41,6 +41,7 @@ export function CustomerMenuCard({ product }: CustomerMenuCardProps) {
         </div>
         <strong className={`mt-auto font-mono text-lg font-black ${soldOut ? 'text-[#94a3b8]' : 'text-[var(--brand-dark)]'}`}>
           {formatCurrency(product.price)}
+          （税抜き）
         </strong>
       </div>
     </article>
